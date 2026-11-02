@@ -139,7 +139,7 @@
     }
   ],
   "lastYear": {
-    "commits": 2447,
+    "commits": 2448,
     "prs": 326,
     "private": 2661,
     "repos": [
@@ -221,7 +221,7 @@
       {
         "owner": "pandazki",
         "name": "pandazki",
-        "commits": 2
+        "commits": 3
       },
       {
         "owner": "pandazki",
