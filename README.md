@@ -68,4 +68,4 @@ A compiler for a personal knowledge library — meetings, documents, chats, emai
   <img alt="Contributions per month since 2024, low through 2025 and rising through 2026, and where the last twelve months of public commits went, led by pneuma-skills and pneuma-framework." src="assets/momentum-light.svg" width="100%">
 </picture>
 
-<sub>Charts drawn by <a href="scripts/render.mjs"><code>scripts/render.mjs</code></a> from GitHub data; run <code>node scripts/render.mjs</code> to refresh.</sub>
+<sub>Charts drawn by <a href="scripts/render.mjs"><code>scripts/render.mjs</code></a> from GitHub data, refreshed weekly by <a href=".github/workflows/refresh.yml">a workflow</a>.</sub>

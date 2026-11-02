@@ -1,0 +1,30 @@
+# Re-fetches contribution data and redraws the SVGs once a week, committing only when something changed.
+name: refresh stats
+
+on:
+  schedule:
+    - cron: '17 3 * * 1' # Mondays, 03:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Render
+        run: node scripts/render.mjs
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: Commit
+        run: |
+          git add data assets
+          if git diff --cached --quiet; then echo "nothing changed"; exit 0; fi
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+            commit -m "Refresh stats ($(node -p "require('./data/stats.json').asOf"))"
+          git push

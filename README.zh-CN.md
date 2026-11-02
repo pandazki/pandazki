@@ -68,4 +68,4 @@ bunx pneuma-skills slide --workspace ./my-first-pneuma-slide
   <img alt="2024 年以来每月的贡献：2025 年之前不多，2026 年持续上升；以及过去 12 个月公开提交的分布，pneuma-skills 和 pneuma-framework 最多。" src="assets/momentum-light.svg" width="100%">
 </picture>
 
-<sub>图表由 <a href="scripts/render.mjs"><code>scripts/render.mjs</code></a> 根据 GitHub 数据生成，运行 <code>node scripts/render.mjs</code> 刷新。</sub>
+<sub>图表由 <a href="scripts/render.mjs"><code>scripts/render.mjs</code></a> 根据 GitHub 数据生成，<a href=".github/workflows/refresh.yml">每周自动刷新</a>。</sub>
