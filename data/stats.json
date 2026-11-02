@@ -139,7 +139,7 @@
     }
   ],
   "lastYear": {
-    "commits": 2445,
+    "commits": 2447,
     "prs": 326,
     "private": 2661,
     "repos": [
@@ -204,11 +204,6 @@
         "commits": 6
       },
       {
-        "owner": "nemori-ai",
-        "name": "omne-harness-lite",
-        "commits": 3
-      },
-      {
         "owner": "pandazki",
         "name": "pneuma-mode-gallery",
         "commits": 3
@@ -217,6 +212,16 @@
         "owner": "LLM-Evaluation-s-Always-Fatiguing",
         "name": "leaf-next",
         "commits": 3
+      },
+      {
+        "owner": "nemori-ai",
+        "name": "omne-harness-lite",
+        "commits": 3
+      },
+      {
+        "owner": "pandazki",
+        "name": "pandazki",
+        "commits": 2
       },
       {
         "owner": "pandazki",
