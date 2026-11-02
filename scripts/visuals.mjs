@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Illustrative animated pieces (no live data): the Pneuma concept, the replay, the knowledge compiler,
-// pneuma-craft + pneuma-framework, Nemori memory.
+// pneuma-craft + pneuma-framework, omne-harness-lite runtime continuity, Nemori memory.
 //   node scripts/visuals.mjs   renders just these (render.mjs renders them too)
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -583,6 +583,133 @@ function renderPKC(theme) {
   });
 }
 
+// ---------- omne: runtimes with their own lifecycles; the process dies, the responsibility doesn't ----------
+
+function renderOmne(theme) {
+  const t = THEMES[theme];
+  const W = 880, H = 280, D = 20;
+  const L = new Loop(D);
+  const bg = theme === 'dark' ? '#0d1117' : '#ffffff';
+  const A = [];
+  const css = ['.gx{transform-box:fill-box;transform-origin:left}.pop{transform-box:fill-box;transform-origin:center}'];
+  const pop = t0 => L.on([[[0, t0], 'opacity:0;transform:scale(.3)'], [[t0 + 0.3, D], 'opacity:1;transform:scale(1)']]);
+  const draw = (len, t0, dur) => L.on([[[0, t0], `stroke-dashoffset:${r1(len)};animation-timing-function:linear`], [[t0 + dur, D], 'stroke-dashoffset:0']]);
+  const lbl = (x, y, s, o = {}) => text(x, y, s, { size: 11, fill: t.faint, ...o });
+
+  // one playhead drives the run; every bar grows exactly under it
+  const X0 = 124, X1 = 856;
+  const C = { I2: 138, M0: 176, M1: 236, M4: 300, R: 346, RE: 370, M6: 480, ACK: 516, EFF: 556, W0: 600, W1: 700, F4: 760 };
+  const HEAD = [[0.5, X0], [1.4, C.M0], [2.2, C.M0], [3.2, C.M1], [4.2, C.M4], [6.0, C.R], [7.0, C.RE], [8.0, C.RE], [9.2, C.M6], [9.8, C.ACK], [10.4, C.EFF], [11.0, C.W0], [12.8, C.W1], [13.8, C.F4], [14.6, X1]];
+  const grow = (xa, xb) => {
+    const f = [[0, 'transform:scaleX(0)']];
+    HEAD.forEach(([tt, x]) => f.push([tt, `transform:scaleX(${r1(Math.max(0, Math.min(1, (x - xa) / (xb - xa))) * 1000) / 1000});animation-timing-function:linear`]));
+    f.push([D, 'transform:scaleX(1)']);
+    return L.on(f);
+  };
+  const bar = (xa, xb, y, color, extra = {}) => el('rect', { x: xa, y: y - 1.5, width: xb - xa, height: 3, rx: 1.5, fill: color, class: 'a gx', style: grow(xa, xb), ...extra });
+
+  {
+    // checkpoint ruler, with faint guides down through every lane
+    const LY = { session: 60, agent: 106, model: 150, tool: 194 }, JY = 232;
+    A.push(text(X1, 14, 'illustrative', { size: 11, fill: t.faint, anchor: 'end' }));
+    Object.entries({ I2: C.I2, M0: C.M0, M1: C.M1, M4: C.M4, M6: C.M6, F4: C.F4 }).forEach(([k, x]) => {
+      A.push(lbl(x, 34, k, { anchor: 'middle', fill: k === 'M4' ? t.emberText : t.faint }));
+      A.push(el('path', { d: `M${x},40V${JY - 4}`, stroke: t.line, strokeDasharray: '1 4' }));
+    });
+    // lanes
+    [['session', LY.session], ['agent runtime', LY.agent], ['model runtime', LY.model], ['tool runtime', LY.tool]].forEach(([name, y]) => {
+      A.push(text(24, y + 4, name, { size: 11.5, fill: name === 'agent runtime' ? t.emberText : t.muted }));
+      A.push(el('path', { d: `M${X0},${y + 0.5}H${X1}`, stroke: t.line }));
+    });
+    // the journal: solid, quiet, append-only
+    A.push(text(24, JY + 12, 'journal', { size: 11.5, fill: t.fg }));
+    A.push(el('rect', { x: X0 + 0.5, y: JY + 0.5, width: X1 - X0 - 1, height: 15, rx: 2, fill: t.soft, stroke: t.line }));
+    const entry = (x, t0) => el('rect', { x: x - 1.5, y: JY + 3, width: 3, height: 10, rx: 1, fill: t.muted, class: 'a pop', style: pop(t0) });
+    A.push(entry(C.M0, 1.4), entry(C.M1, 3.2), entry(C.M6, 9.3), entry(C.ACK, 9.9), entry(C.F4, 13.9));
+    A.push(lbl(C.M0, JY + 34, 'request + intent', L.sh(1.6)));
+    A.push(lbl(C.M6, JY + 34, 'materials → ack', L.sh(9.6)));
+    A.push(lbl(C.F4, JY + 34, 'commit', L.sh(14.0)));
+
+    // session: one lifecycle across the whole run
+    A.push(bar(C.I2, X1, LY.session, t.muted));
+
+    // agent runtime, process 1: runs to M4, then SIGKILL
+    A.push(g({ opacity: 0.3, class: 'a', style: L.on([[[0, 4.5], 'opacity:1'], [[5.0, D], 'opacity:.3']]) },
+      bar(C.I2, C.M4, LY.agent, t.ember) + lbl(X0, LY.agent - 9, 'pid 4182')));
+    A.push(text(C.M4, LY.agent + 4.5, '✗', { size: 13, fill: t.fg, anchor: 'middle', weight: 600, class: 'a pop', style: pop(4.3) }));
+    A.push(el('circle', { cx: C.M4, cy: LY.agent, r: 10, stroke: t.ember, opacity: 0, class: 'a pop', style: L.on([[[0, 4.25], 'opacity:0;transform:scale(.3)'], [4.4, 'opacity:1;transform:scale(1)'], [[5.0, D], 'opacity:0;transform:scale(1.8)']]) }));
+    A.push(lbl(C.M4 - 8, LY.agent + 17, 'SIGKILL', { anchor: 'end', fill: t.muted, ...L.sh(4.4) }));
+
+    // model runtime: the original call stays in flight through the kill
+    A.push(bar(C.M0, C.M6, LY.model, t.muted));
+    A.push(lbl(C.M0, LY.model - 9, 'call m-17', L.sh(1.5)));
+    A.push(lbl(C.R + 8, LY.model + 17, 'in flight', L.sh(4.8)));
+    A.push(el('circle', { cx: C.M6, cy: LY.model, r: 3, fill: t.fg, class: 'a pop', style: pop(9.2) }));
+
+    // tool runtime: a write established before the kill is kept
+    A.push(el('rect', { x: C.M1 - 3.5, y: LY.tool - 3.5, width: 7, height: 7, rx: 1, fill: t.muted, class: 'a pop', style: pop(3.2) }));
+    A.push(lbl(C.M1 + 8, LY.tool - 9, 'write · kept', L.sh(3.4)));
+
+    // agent runtime, process 2: reads the journal and reclaims the original responsibility
+    A.push(lbl(C.R, LY.agent - 9, 'pid 5307', { fill: t.emberText, ...L.sh(6.0) }));
+    const rl = JY - LY.agent - 8;
+    A.push(el('path', { d: `M${C.R},${JY - 1}V${LY.agent + 7}m-4,5l4,-5l4,5`, stroke: t.ember, strokeDasharray: '2 2', ...L.sh(6.0, null, 0.2) }));
+    A.push(el('rect', { x: C.R - 1, y: LY.agent + 7, width: 2, height: rl, fill: t.ember, opacity: 0, class: 'a', style: L.on([[[0, 6.0], 'opacity:0'], [6.1, 'opacity:.25'], [[6.6, D], 'opacity:0']]) }));
+    A.push(lbl(C.R + 6, JY - 6, 'read', L.sh(6.2)));
+    A.push(lbl(C.RE + 2, LY.agent + 17, 'reclaim original responsibility', { fill: t.fg, ...L.sh(6.8) }));
+    // ... re-attaching to the same call, by its original reference
+    A.push(el('path', { d: `M${C.RE},${LY.agent + 3}V${LY.model - 4}`, stroke: t.ember, strokeWidth: 1.5, strokeDasharray: r1(LY.model - LY.agent - 7), class: 'a', style: draw(LY.model - LY.agent - 7, 7.0, 0.4) }));
+    A.push(el('circle', { cx: C.RE, cy: LY.model, r: 3.5, fill: bg, stroke: t.ember, strokeWidth: 1.5, class: 'a pop', style: pop(7.4) }));
+    A.push(lbl(C.RE + 8, LY.model - 9, 'original ref · not re-issued', { fill: t.muted, ...L.sh(7.4) }));
+    A.push(bar(C.R, C.W0, LY.agent, t.ember));
+
+    // a new effect, submitted once by the replacement; then the wait for its result
+    A.push(el('rect', { x: C.EFF - 3.5, y: LY.tool - 3.5, width: 7, height: 7, rx: 1, fill: bg, stroke: t.ember, strokeWidth: 1.5, class: 'a pop', style: pop(10.4) }));
+    A.push(lbl(C.EFF - 10, LY.tool - 9, 'effect · submitted once', { anchor: 'end', fill: t.muted, ...L.sh(10.5) }));
+    A.push(el('path', { d: `M${C.W0},${LY.agent + 0.5}H${C.W1}`, stroke: t.ember, strokeWidth: 3, strokeDasharray: '3 4', class: 'a gx', style: grow(C.W0, C.W1) }));
+    A.push(lbl(C.W0, LY.agent - 9, 'wait · notify lost', { fill: t.muted, ...L.sh(11.2) }));
+    // the notification that never arrives
+    A.push(el('circle', { cx: 0, cy: 0, r: 2.5, fill: t.muted, opacity: 0, class: 'a', style: L.on([
+      [[0, 11.0], `transform:translate(${C.EFF + 6}px,${LY.tool - 6}px);opacity:0`],
+      [11.05, `transform:translate(${C.EFF + 6}px,${LY.tool - 6}px);opacity:1;animation-timing-function:linear`],
+      [11.7, `transform:translate(612px,140px);opacity:1`],
+      [[12.0, D], 'transform:translate(616px,136px);opacity:0'],
+    ]) }));
+    A.push(text(616, 140, '✗', { size: 11, fill: t.muted, anchor: 'middle', opacity: 0, class: 'a', style: L.show(11.7, 12.4, 0.15) }));
+    // re-read the original source; the outcome is not known, so it stays unknown
+    const rr = [[680, LY.agent + 4], [672, 160], [C.EFF + 18, LY.tool - 6], [C.EFF + 7, LY.tool - 4]];
+    const rrLen = polyLen(bezPoints(...rr)) + 4;
+    A.push(el('path', { d: `M${rr[0]}C${rr[1]} ${rr[2]} ${rr[3]}`, stroke: t.ember, strokeDasharray: r1(rrLen), class: 'a', style: draw(rrLen, 12.0, 0.6) }));
+    const rrl = 're-read source → reconcile', rrx = 648, rry = LY.model + 23;
+    A.push(g(L.sh(12.2), el('rect', { x: rrx - 3, y: rry - 10, width: r1(textW(rrl, 11) + 6), height: 13, fill: bg })
+      + lbl(rrx, rry, rrl, { fill: t.muted })));
+    const chip = 'outcome: unknown', cw = textW(chip, 11) + 14;
+    A.push(g({ class: 'a', style: L.show(12.6, null, 0.3) },
+      el('rect', { x: C.EFF - 6.5, y: LY.tool + 9.5, width: cw, height: 17, rx: 8.5, stroke: t.muted, strokeDasharray: '2 2' })
+      + lbl(C.EFF + 0.5, LY.tool + 22, chip, { fill: t.muted })));
+    A.push(bar(C.W1, C.F4, LY.agent, t.ember));
+
+    // the single terminal commit, then back to idle
+    A.push(g({ class: 'a pop', style: pop(13.8) }, el('rect', { x: C.F4 - 5.5, y: LY.agent - 5.5, width: 11, height: 11, fill: bg, stroke: t.ember, strokeWidth: 1.75, transform: `rotate(45 ${C.F4} ${LY.agent})` })
+    + el('circle', { cx: C.F4, cy: LY.agent, r: 2, fill: t.ember })));
+    A.push(lbl(X1, LY.agent + 17, 'tryFinish · single commit', { anchor: 'end', fill: t.fg, ...L.sh(14.0) }));
+    A.push(el('path', { d: `M${C.F4 + 12},${LY.agent + 0.5}H${X1}`, stroke: t.faint, strokeDasharray: '1 3', ...L.sh(14.4) }));
+    A.push(lbl(X1, LY.agent - 9, 'idle', { anchor: 'end', ...L.sh(14.5) }));
+
+    // the playhead
+    const ph = [[0, `transform:translateX(${X0}px);opacity:0`]];
+    HEAD.forEach(([tt, x], i) => ph.push([tt, `transform:translateX(${x}px);opacity:${i === 0 ? 0 : 1};animation-timing-function:linear`]));
+    ph.push([[15.0, D], `transform:translateX(${X1}px);opacity:0`]);
+    A.push(el('rect', { x: -0.5, y: 40, width: 1, height: JY - 44, fill: t.ember, opacity: 0, class: 'a', style: L.on(ph) }));
+  }
+
+  return svg({
+    w: W, h: H, title: 'omne-harness-lite: agent runtime continuity',
+    desc: 'Illustrative timeline of agent runtime continuity in omne-harness-lite. Session, agent runtime, model runtime and tool runtime run on separate lifecycles above a journal. At M0 the request and its intent are saved to the journal and model call m-17 starts. A write is established at M1 and kept. At M4 the agent runtime process (pid 4182) is killed with SIGKILL; the session, the in-flight model call and the journal carry on. A replacement process (pid 5307) reads the journal, reclaims the original responsibility and re-attaches to the same call by its original reference, without re-issuing it. The result is read, materials are saved and then acknowledged. The replacement submits an effect once; a notification about it is lost, so the agent re-reads the original source, and since the outcome cannot be established it stays unknown. tryFinish is the single terminal commit, then the runtime goes idle.',
+    css: css.join('') + L.css(), body: g(L.wrap(), A.join('')),
+  });
+}
+
 // ---------- memory: Nemori's episodic pipeline and the predict–calibrate loop ----------
 
 function renderMemory(theme) {
@@ -710,6 +837,8 @@ export function renderVisuals() {
     ['pneuma-concept-dark.svg', renderConcept('dark')],
     ['pkc-light.svg', renderPKC('light')],
     ['pkc-dark.svg', renderPKC('dark')],
+    ['omne-light.svg', renderOmne('light')],
+    ['omne-dark.svg', renderOmne('dark')],
     ['stack-light.svg', renderStack('light')],
     ['stack-dark.svg', renderStack('dark')],
     ['memory-light.svg', renderMemory('light')],

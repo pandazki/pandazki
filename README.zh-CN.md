@@ -45,6 +45,15 @@ bunx pneuma-skills slide --workspace ./my-first-pneuma-slide
 - **[pneuma-craft](https://github.com/pandazki/pneuma-craft)** · 人机协同创作的领域内核——生成式创作产出的不是编辑历史，而是一棵变体树。溯源是一等原语，人与 agent 共用同一套事件溯源的命令接口。
 - **[pneuma-framework](https://github.com/pandazki/pneuma-framework)** · AI-Native 创作工具的治理层——agent 说"完成"不算数。框架只掌控变更循环的时序与关卡（验证、审批、发布、回滚），默认 fail-closed；一切副作用归宿主所有。
 
+### Agent Harness
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/omne-dark.svg">
+  <img alt="omne-harness-lite 的示意动画：会话、agent、模型与工具运行时各有生命周期；agent 执行进程中途被杀，会话、进行中的模型调用和 Journal 都还在，新进程读取 Journal 认回原责任，沿原引用接上同一个模型调用，确认后在唯一的终态提交点结束。" src="assets/omne-light.svg" width="100%">
+</picture>
+
+**[omne-harness-lite](https://github.com/nemori-ai/omne-harness-lite)** · 以 Cordis 为内核、为长期运行而设计的 agent harness——进程会死，工作不该随之消失。Agent 运行时与持久状态解耦：执行进程中途被杀，新进程依据 Journal 认回原责任；未决的模型调用沿原引用续接而非重发，等待中的工作在唤醒后与原操作对账，结果未知就如实保持未知。能力在运行期动态演化，租户隔离从第一天落实，全链路可观测。目前处于 0.0.0 → 0.1.0 研发阶段。
+
 ### 记忆与注意力
 
 <picture>
@@ -55,10 +64,10 @@ bunx pneuma-skills slide --workspace ./my-first-pneuma-slide
 **[Nemori](https://github.com/nemori-ai/nemori)**（[论文](https://arxiv.org/abs/2508.03341)）· Agent 的自组织长期记忆。记忆该以什么粒度组织？Nemori 的答案是人类的情景记忆：依事件分割理论把对话切成情景，再以预测—校准机制，从预期与现实的偏差中提炼新知识。
 
 - **[fold-skill](https://github.com/nemori-ai/fold-skill)** · Agent 驱动的注意力整理——人离开再回来，最先该看到什么？多渠道信息被统一为同构输入，由 agent 结合上下文估计与取舍，维护成一份带注意力预算的结构化状态；同一份状态，十二种表达形式。
+
 ### Agent 基础设施
 
 - **[plexus](https://github.com/nemori-ai/plexus)** · Agent-Native 本地能力自描述网关——以语义切面暴露本机软件，将授权与审计内化为领域原语。
-- **[omne-harness-lite](https://github.com/nemori-ai/omne-harness-lite)** · 面向长期运行的 agent harness——会话、agent、模型与工具运行时各自拥有生命周期；执行进程被杀之后，工作按原责任接续，原模型调用精确续上。
 - **[cc-master](https://github.com/nemori-ai/cc-master)** · 长程任务的编排层——把一个 coding agent 会话升格为项目负责人：任务图跨越上下文重置持续存在，数千次排期模拟估算交付时间，只在真正需要判断时把决策交还给人。
 - **[Advanced Agentic Dev Patterns](https://panqiwei.github.io/advanced-agentic-dev-patterns/zh/)** · 一本关于 agentic 系统工程的书 · co-author: [@panqiwei](https://github.com/PanQiWei)
 - **[code-journal](https://github.com/pandazki/code-journal)** · 人机协作编程的本地年鉴——从会话转录中重建每天真正发生了什么，并定位那些由人而非 agent 决定方向的时刻。
