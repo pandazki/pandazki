@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Illustrative animated pieces (no live data): the Pneuma concept, the replay, the knowledge compiler,
-// pneuma-craft + pneuma-framework, omne-harness-lite runtime continuity, Nemori memory.
+// pneuma-craft + pneuma-framework, omne-harness-lite runtime continuity, Fold, Plexus, Nemori memory.
 //   node scripts/visuals.mjs   renders just these (render.mjs renders them too)
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -710,6 +710,378 @@ function renderOmne(theme) {
   });
 }
 
+// ---------- fold: many channels in, one budgeted state (B = 64) out, many forms of the same state ----------
+
+function renderFold(theme) {
+  const t = THEMES[theme];
+  const W = 880, H = 306, D = 20;
+  const L = new Loop(D);
+  const A = [];
+  const css = ['.pop{transform-box:fill-box;transform-origin:center}.gx{transform-box:fill-box;transform-origin:left}'
+    + '.vt{transform-box:fill-box;transform-origin:top}.tl{transform-box:fill-box;transform-origin:0 0}'];
+  const lbl = (x, y, s, o = {}) => text(x, y, s, { size: 11, fill: t.faint, ...o });
+  const hide = { opacity: 0 }; // transient elements: hidden in the still (reduced-motion) frame
+  // a value that changes over the loop: one text per state, cross-faded; the last state is the still
+  const swap = (x, y, states, o = {}) => states.map(([t0, s, oo = {}], i) => {
+    const last = i === states.length - 1;
+    return lbl(x, y, s, { ...o, ...oo, ...(last ? {} : hide), ...L.sh(t0, last ? null : states[i + 1][0] - 0.2, 0.2) });
+  }).join('');
+  // brief highlight windows (several per element allowed)
+  const flash = (ts, hold = 0.5) => {
+    const f = [[0, 'opacity:0']];
+    ts.forEach(t0 => f.push([t0, 'opacity:0'], [t0 + 0.12, 'opacity:1'], [t0 + hold, 'opacity:1'], [t0 + hold + 0.3, 'opacity:0']));
+    f.push([D, 'opacity:0']);
+    return { class: 'a', style: L.on(f), ...hide };
+  };
+  const popAt = (t0, extra = '') => L.on([[[0, t0], `opacity:0;transform:${extra}scale(.6)`], [[t0 + 0.3, D], `opacity:1;transform:${extra}scale(1)`]]);
+
+  A.push(text(856, 14, 'illustrative', { size: 11, fill: t.faint, anchor: 'end' }));
+
+  // ---- 1. channels: dense, heterogeneous input; then one uniform input shape, source kept ----
+  const RY = i => 52 + i * 20;
+  const SX = 186, SW = 114, KMAX = 402, GK = SW / 30;
+  const S = [
+    { k: 'work', recv: [[3.0, '286']], given: [9, 6], mark: 'tick' },
+    { k: 'family', recv: [[3.0, '14']], given: [24, 24], mark: 'dot' },
+    { k: 'community', recv: [[3.0, '97']], given: [3, 0], mark: 'dash' },
+    { k: 'life', recv: [[3.0, '31'], [9.1, '32']], given: [12, 30], mark: 'cross' },
+    { k: 'subscription', recv: [[3.0, '402']], given: [1, 0], mark: 'tick2' },
+  ];
+  A.push(lbl(24, 30, 'stream'), lbl(136, 30, 'recv', { anchor: 'end' }), lbl(172, 30, 'given', { anchor: 'end' }), lbl(SX, 30, 'inputs'));
+  const rnd = rng(11);
+  S.forEach((s, i) => {
+    const cy = RY(i), n = Math.max(2, Math.round((+s.recv[0][1] / KMAX) * 38)), len = SW * (+s.recv[0][1] / KMAX);
+    const xs = Array.from({ length: n }, (_, j) => r1(SX + (j + 0.5 + (rnd() - 0.5) * 0.7) * (len / n)));
+    let het = '';
+    xs.forEach(x => {
+      if (s.mark === 'tick') het += `M${x},${cy + 2}v-${r1(3 + rnd() * 5)}`;
+      else if (s.mark === 'tick2') het += `M${x},${cy + 2}v-7`;
+      else if (s.mark === 'dot') het += `M${x},${cy - 1.5}h0`;
+      else if (s.mark === 'dash') het += `M${x - 2},${cy - 1.5}h4`;
+      else het += `M${x - 2},${cy - 3.5}l4,4m0,-4l-4,4`;
+    });
+    const sq = xs.map(x => `M${r1(x - 1.5)},${cy - 3}h3v3h-3z`).join('');
+    A.push(lbl(24, cy + 4, s.k, { fill: t.muted }));
+    // pour in (clip wipe), then hand over to the uniform squares
+    const w0 = 0.5 + i * 0.22;
+    A.push(g({ ...hide, class: 'a', style: L.show(w0, 3.4, 0.2) },
+      g({ class: 'a', style: L.on([[[0, w0], 'clip-path:inset(0 100% 0 0);animation-timing-function:linear'], [[w0 + 1.6, D], 'clip-path:inset(0 0 0 0)']]) },
+        el('path', { d: het, stroke: t.muted, strokeWidth: s.mark === 'dot' ? 3 : 1.2, strokeLinecap: 'round' }))));
+    A.push(el('path', { d: sq, fill: t.muted, class: 'a', style: L.show(3.5, null, 0.5) }));
+    A.push(swap(136, cy + 4, s.recv, { anchor: 'end' }));
+    // given: grows once the layer is filled, re-settles after the yield
+    const [ga, gb] = s.given, gy = cy + 5;
+    if (gb > 0) {
+      A.push(el('rect', { x: SX, y: gy, width: r1(gb * GK), height: 2.5, fill: t.fg, class: 'a gx',
+        style: L.on([[[0, 8.1], 'transform:scaleX(0)'], [[8.6, 10.9], `transform:scaleX(${r1((ga / gb) * 1000) / 1000})`], [[11.5, D], 'transform:scaleX(1)']]) }));
+    } else {
+      A.push(el('rect', { x: SX, y: gy, width: r1(ga * GK), height: 2.5, fill: t.fg, ...hide, class: 'a gx',
+        style: L.on([[[0, 8.1], 'transform:scaleX(0);opacity:1'], [[8.6, 10.9], 'transform:scaleX(1);opacity:1'], [11.5, 'transform:scaleX(0);opacity:1'], [D, 'transform:scaleX(0);opacity:0']]) }));
+    }
+    A.push(swap(172, cy + 4, ga === gb ? [[8.1, String(gb)]] : [[8.1, String(ga)], [11.2, String(gb)]], { fill: t.fg, anchor: 'end' }));
+  });
+  // one new input on the life channel, later
+  const lifeEnd = SX + SW * (31 / KMAX);
+  A.push(el('path', { d: `M${r1(lifeEnd + 2.5)},${RY(3) - 3}h3v3h-3z`, fill: t.fg, class: 'a pop', style: popAt(8.9) }));
+  A.push(lbl(24, 160, 'uniform input · provenance kept', L.sh(3.8)));
+  A.push(lbl(24, 178, 'received ≠ given', L.sh(8.4)));
+
+  // ---- 2. the agent estimates in context and assigns a tier; shares derive from tier ----
+  const TX = 344, TR = 446;
+  const TIERS = [['critical', 24], ['high', 12], ['normal', 6], ['low', 3], ['trace', 1]];
+  A.push(lbl(TX, 30, 'agent · tier → share', { fill: t.emberText }));
+  const tierFlash = { critical: [4.6, 8.9], high: [5.2], normal: [5.8, 9.8], low: [6.4, 7.0], trace: [7.6] };
+  TIERS.forEach(([k, v], i) => {
+    const cy = RY(i);
+    A.push(lbl(TX, cy + 4, k, { fill: t.muted }), lbl(TR, cy + 4, String(v), { anchor: 'end' }));
+    A.push(g(flash(tierFlash[k], 0.6), lbl(TX, cy + 4, k, { fill: t.emberText }) + lbl(TR, cy + 4, String(v), { fill: t.emberText, anchor: 'end' })));
+  });
+  // stream -> tier, one per assignment
+  [[4.6, 1, 0], [5.2, 3, 1], [5.8, 0, 2], [6.4, 0, 3], [7.0, 2, 3], [7.6, 4, 4], [8.9, 3, 0]].forEach(([t0, si, ti]) => {
+    const p0 = [306, RY(si) - 1.5], p1 = [TX - 6, RY(ti) - 0.5];
+    const c1 = [p0[0] + 22, p0[1]], c2 = [p1[0] - 22, p1[1]];
+    const len = r1(polyLen(bezPoints(p0, c1, c2, p1)) + 2);
+    A.push(el('path', { d: `M${p0}C${c1} ${c2} ${p1}`, stroke: t.ember, strokeWidth: 1.25, strokeDasharray: len, ...hide, class: 'a',
+      style: L.on([[[0, t0], `stroke-dashoffset:${len};opacity:1`], [t0 + 0.35, 'stroke-dashoffset:0;opacity:1'], [t0 + 1.0, 'stroke-dashoffset:0;opacity:1'], [[t0 + 1.3, D], 'stroke-dashoffset:0;opacity:0']]) }));
+  });
+
+  // ---- 3. the layer: 64 cells, items as blocks sized by share ----
+  const GX = 500, GY = 42, P = 22;
+  const box = (c, r, cw, rh) => ({ x: GX + c * P, y: GY + r * P, width: cw * P - 1, height: rh * P - 1 });
+  let cells = '';
+  for (let c = 0; c < 16; c++) for (let r = 0; r < 4; r++) cells += `M${GX + c * P + 0.5},${GY + r * P + 0.5}h20v20h-20z`;
+  A.push(el('path', { d: cells, stroke: t.line }));
+  A.push(lbl(GX, 30, 'layer · B = 64', { fill: t.muted }));
+  A.push(swap(851, 30, [[0.3, 'Σ 0 / 64'], [4.9, 'Σ 24 / 64'], [5.5, 'Σ 36 / 64'], [6.1, 'Σ 42 / 64'], [6.7, 'Σ 45 / 64'], [7.3, 'Σ 48 / 64'], [7.9, 'Σ 49 / 64'],
+    [9.2, 'Σ 73 > 64', { fill: t.fg, weight: 600 }], [11.3, 'Σ 60 / 64 · 4 empty']], { anchor: 'end', fill: t.muted }));
+  const blockRect = (b, extra = {}) => el('rect', { ...b, fill: t.soft, stroke: t.faint, ...extra });
+  const id = (b, s, extra = {}) => lbl(b.x + 5, b.y + 14, s, { fill: t.fg, ...extra });
+  const tag = (b, s, extra = {}) => lbl(b.x + 5, b.y + 28, s, { fill: t.muted, ...extra });
+  const share = (b, line, s, extra = {}) => lbl(b.x + b.width - 4, b.y + (line === 1 ? 14 : 28), s, { anchor: 'end', ...extra });
+  const outline = (b, t0) => el('rect', { x: b.x - 1.5, y: b.y - 1.5, width: b.width + 3, height: b.height + 3, stroke: t.ember, strokeWidth: 1.5, ...flash([t0], 0.4) });
+
+  // boiler (family) critical 24 - stays
+  const bB = box(0, 0, 6, 4);
+  A.push(g({ class: 'a pop', style: popAt(4.9) }, blockRect(bB) + id(bB, 'boiler') + tag(bB, 'family') + share(bB, 2, '24')), outline(bB, 4.9));
+  // lease (life) high 12 -> steps down to normal 6, moves to make room
+  const bL = box(12, 0, 3, 2), dxL = -6 * P;
+  A.push(g({ class: 'a pop', style: L.on([[[0, 5.2], `opacity:0;transform:translate(${dxL}px,0) scale(.6)`], [[5.5, 10.6], `opacity:1;transform:translate(${dxL}px,0) scale(1)`], [[10.9, D], 'opacity:1;transform:translate(0,0) scale(1)']]) },
+    el('rect', { ...bL, fill: t.soft, stroke: t.faint, vectorEffect: 'non-scaling-stroke', class: 'a vt',
+      style: L.on([[[0, 9.8], `transform:scaleY(${r1((4 * P - 1) / (2 * P - 1) * 1000) / 1000})`], [[10.2, D], 'transform:scaleY(1)']]) })
+    + id(bL, 'lease') + tag(bL, 'life') + swap(bL.x + bL.width - 4, bL.y + 28, [[5.2, '12'], [9.9, '6']], { anchor: 'end' })), outline(box(6, 0, 3, 4), 5.5));
+  // relnotes (work) normal 6 + ci-main (work) low 3 -> merged into release, normal 6
+  const bR = box(12, 2, 3, 2), dR = [-3 * P, -2 * P];
+  A.push(g({ class: 'a pop', style: L.on([[[0, 6.1], `opacity:0;transform:translate(${dR[0]}px,${dR[1]}px) scale(.6)`], [[6.4, 10.3], `opacity:1;transform:translate(${dR[0]}px,${dR[1]}px) scale(1)`], [[10.6, D], 'opacity:1;transform:translate(0,0) scale(1)']]) },
+    blockRect(bR) + swap(bR.x + 5, bR.y + 14, [[6.1, 'relnotes'], [9.9, 'release']], { fill: t.fg }) + swap(bR.x + 5, bR.y + 28, [[6.1, 'work'], [9.9, 'merged']], { fill: t.muted })
+    + share(bR, 2, '6')), outline(box(9, 0, 3, 2), 6.1));
+  const bC = box(9, 2, 3, 1);
+  A.push(g({ ...hide, class: 'a pop', style: L.on([[[0, 6.7], 'opacity:0;transform:translate(0,0) scale(.6)'], [[7.0, 9.8], 'opacity:1;transform:translate(0,0) scale(1)'], [10.1, `opacity:0;transform:translate(0,-${P}px) scale(1)`], [D, `opacity:0;transform:translate(0,-${P}px) scale(1)`]]) },
+    blockRect(bC) + id(bC, 'ci-main') + share(bC, 1, '3')), outline(bC, 6.7));
+  // forum (community) low 3, newsletter (subscription) trace 1 -> withdrawn
+  const bF = box(9, 3, 3, 1), bN = box(12, 0, 1, 1);
+  const gone = (t0, t1) => L.on([[[0, t0], 'opacity:0;transform:scale(.6)'], [[t0 + 0.3, t1], 'opacity:1;transform:scale(1)'], [[t1 + 0.3, D], 'opacity:0;transform:scale(1)']]);
+  A.push(g({ ...hide, class: 'a pop', style: gone(7.3, 9.8) }, blockRect(bF) + id(bF, 'forum') + share(bF, 1, '3')), outline(bF, 7.3));
+  A.push(g({ ...hide, class: 'a pop', style: gone(7.9, 9.9) }, blockRect(bN) + lbl(bN.x + 10.5, bN.y + 14.5, '1', { anchor: 'middle' })), outline(bN, 7.9));
+  // visa-docs (life) critical 24 arrives with the layer full: held outside, then placed
+  const bV = box(6, 0, 6, 4), dyV = 4 * P + 12;
+  A.push(g({ class: 'a', style: L.on([[[0, 9.0], `opacity:0;transform:translate(0,${dyV}px)`], [[9.3, 10.9], `opacity:1;transform:translate(0,${dyV}px)`], [[11.3, D], 'opacity:1;transform:translate(0,0)']]) },
+    blockRect(bV, { class: 'a', style: L.show(11.1, null, 0.25) })
+    + el('rect', { ...bV, stroke: t.ember, strokeWidth: 1.25, strokeDasharray: '3 3', ...hide, class: 'a', style: L.show(9.0, 11.1, 0.25) })
+    + id(bV, 'visa-docs') + tag(bV, 'life') + share(bV, 2, '24')
+    + lbl(bV.x + bV.width + 8, bV.y + 28, '+24', { fill: t.emberText, ...hide, ...L.sh(9.2, 10.8, 0.2) })));
+  A.push(lbl(851, 156, 'withdrawn: forum, newsletter', { anchor: 'end', ...L.sh(11.4) }));
+
+  // ---- 4. the person comes back: annotation saved -> acknowledged on the next pass ----
+  const note = '"tue morning ok"', nW = 18 + textW(note, 11) + 8;
+  A.push(g(L.sh(12.0), el('path', { d: `M${GX + 40},${GY + 4 * P}V${GY + 4 * P + 9}`, stroke: t.sand })
+    + el('rect', { x: GX, y: GY + 4 * P + 9, width: r1(nW), height: 17, rx: 8.5, stroke: t.sand })
+    + el('circle', { cx: GX + 9, cy: GY + 4 * P + 17.5, r: 3, fill: t.sand })
+    + lbl(GX + 18, GY + 4 * P + 21.5, note, { fill: t.fg })));
+  const sy = GY + 4 * P + 40;
+  let sx = GX;
+  const seg = (s, fill, t0) => { const out = lbl(sx, sy, s, { fill, ...L.sh(t0) }); sx += textW(s, 11) + 6.6; return out; };
+  A.push(seg('ann-1', t.faint, 12.0), seg('saved', t.sandText, 12.4), seg('→', t.faint, 13.4), seg('acknowledged', t.emberText, 13.4), seg('≠ action done', t.faint, 13.8));
+  A.push(el('rect', { x: GX - 3.5, y: GY - 3.5, width: 16 * P + 6, height: 4 * P + 6, rx: 3, stroke: t.ember, strokeWidth: 1.5, ...flash([13.1], 0.5) }));
+
+  // ---- 5. one state, several forms ----
+  A.push(text(24, 240, '1 state · 12 forms', { size: 12, fill: t.fg, ...L.sh(14.5) }), lbl(24, 257, '4 shown', L.sh(14.7)));
+  const FB = [[180, 196, 150, 84], [372, 194, 86, 92], [494, 196, 88, 88], [620, 204, 231, 70]];
+  FB.forEach(([x, y, w, h], k) => {
+    const sx_ = w / (16 * P - 1), sy_ = h / (4 * P - 1);
+    A.push(el('rect', { x: GX, y: GY, width: 16 * P - 1, height: 4 * P - 1, stroke: t.faint, strokeDasharray: '3 3', vectorEffect: 'non-scaling-stroke', ...hide, class: 'a tl',
+      style: L.on([[[0, 14.2], 'opacity:0;transform:translate(0,0) scale(1)'], [14.25, 'opacity:.9;transform:translate(0,0) scale(1)'],
+        [15.0 + k * 0.12, `opacity:.9;transform:translate(${x - GX}px,${y - GY}px) scale(${r1(sx_ * 1000) / 1000},${r1(sy_ * 1000) / 1000})`],
+        [[15.4 + k * 0.12, D], `opacity:0;transform:translate(${x - GX}px,${y - GY}px) scale(${r1(sx_ * 1000) / 1000},${r1(sy_ * 1000) / 1000})`]]) }));
+  });
+  const fShow = k => L.sh(15.0 + k * 0.25, null, 0.4);
+  // treemap: area = share
+  {
+    const [x, y, w, h] = FB[0], u = w * h / 64, cw = (24 * u) / h, rw = w - 2 * cw;
+    const rr = (a, b, c, d, s, dash) => el('rect', { x: r1(a + 1), y: r1(b + 1), width: r1(c - 2), height: r1(d - 2), fill: dash ? 'none' : t.soft, stroke: dash ? t.faint : t.faint, strokeDasharray: dash ? '2 2' : null })
+      + (s ? lbl(a + c / 2, b + d / 2 + 4, s, { anchor: 'middle', fill: t.muted }) : '');
+    const h6 = (6 * u) / rw, h4 = (4 * u) / rw;
+    A.push(g(fShow(0), rr(x, y, cw, h, '24') + rr(x + cw, y, cw, h, '24') + rr(x + 2 * cw, y, rw, h6, '6') + rr(x + 2 * cw, y + h6, rw, h6, '6') + rr(x + 2 * cw, y + 2 * h6, rw, h4, '', true)
+      + lbl(x + w / 2, 298, 'treemap', { anchor: 'middle' })));
+  }
+  // phone home: the top 3 asks, by rank (same share -> needs-you -> newer first)
+  {
+    const [x, y, w, h] = FB[1];
+    let s = el('rect', { x, y, width: w, height: h, rx: 11, stroke: t.muted }) + el('path', { d: `M${x + w / 2 - 9},${y + 6}h18`, stroke: t.faint, strokeWidth: 2, strokeLinecap: 'round' });
+    ['visa-docs', 'boiler', 'lease'].forEach((n, i) => {
+      s += el('rect', { x: x + 7, y: y + 14 + i * 24, width: w - 14, height: 20, rx: 4, fill: t.soft }) + lbl(x + 12, y + 28 + i * 24, n, { fill: t.fg });
+    });
+    A.push(g(fShow(1), s + lbl(x + w / 2, 298, 'phone home', { anchor: 'middle' })));
+  }
+  // watch glance: the 64 as a ring, open asks in the middle
+  {
+    const [x, y, w] = FB[2], cx = x + w / 2, cy = y + w / 2, R = 33;
+    const arc = (a0, a1) => {
+      const p = a => [r1(cx + R * Math.cos((a - 90) * Math.PI / 180)), r1(cy + R * Math.sin((a - 90) * Math.PI / 180))];
+      return `M${p(a0)}A${R},${R} 0 ${a1 - a0 > 180 ? 1 : 0} 1 ${p(a1)}`;
+    };
+    let a = 0, s = el('circle', { cx, cy, r: w / 2, stroke: t.line });
+    [24, 24, 6, 6, 4].forEach((v, i) => {
+      const span = (v / 64) * 360;
+      s += el('path', { d: arc(a + 2, a + span - 2), stroke: i === 4 ? t.line : t.muted, strokeWidth: i === 4 ? 2 : 6, strokeDasharray: i === 4 ? '2 2' : null });
+      a += span;
+    });
+    s += text(cx, cy + 3, '3', { size: 13, fill: t.fg, anchor: 'middle', weight: 600 }) + lbl(cx, cy + 17, 'asks', { anchor: 'middle' });
+    A.push(g(fShow(2), s + lbl(cx, 298, 'watch glance', { anchor: 'middle' })));
+  }
+  // timeline: due dates from now
+  {
+    const [x, y, w] = FB[3], ay = y + 44, x0 = x + 16, day = (w - 30) / 9.6;
+    let s = el('path', { d: `M${x + 8},${ay}H${x + w}`, stroke: t.line }) + el('path', { d: `M${x0},${ay - 8}V${ay + 8}`, stroke: t.muted }) + lbl(x0, ay + 22, 'now', { anchor: 'middle' });
+    [['boiler', 2, 9], ['visa-docs', 5, 9], ['lease', 9, 5]].forEach(([n, d, sz]) => {
+      const mx = r1(x0 + d * day);
+      s += el('rect', { x: r1(mx - sz / 2), y: r1(ay - sz / 2), width: sz, height: sz, fill: t.muted }) + lbl(mx, ay - 12, n, { anchor: 'middle', fill: t.fg }) + lbl(mx, ay + 22, `+${d}d`, { anchor: 'middle' });
+    });
+    A.push(g(fShow(3), s + lbl(x + w / 2, 298, 'timeline', { anchor: 'middle' })));
+  }
+
+  return svg({
+    w: W, h: H, title: 'Fold: one attention budget, one state, many forms',
+    desc: 'Illustrative, with invented counts. Five channels (work, family, community, life, subscription) pour in inputs at very different rates; each becomes one uniform input shape that keeps its source. The agent estimates each item in context and assigns a tier; the share derives from the tier (critical 24, high 12, normal 6, low 3, trace 1) inside a layer budget of B = 64. Received is not given: subscription sends 402 inputs and ends with no share, family sends 14 and holds 24. When a new critical item (visa-docs) arrives with the layer full, others yield: lease steps down from high to normal, relnotes and ci-main merge into release, forum and newsletter are withdrawn, and 4 cells stay empty. The person comes back and leaves an annotation; it is saved, then acknowledged on the next pass, which is not the same as the action being done. The same state is then shown as four of its twelve forms: a treemap, a phone home screen with the top three asks, a watch glance and a timeline.',
+    css: css.join('') + L.css(), body: g(L.wrap(), A.join('')),
+  });
+}
+
+// ---------- plexus: local apps sliced into capability facets behind one self-describing endpoint ----------
+
+function renderPlexus(theme) {
+  const t = THEMES[theme];
+  const W = 880, H = 306, D = 23;
+  const L = new Loop(D);
+  const A = [];
+  const css = ['.pop{transform-box:fill-box;transform-origin:center}'];
+  const lbl = (x, y, s, o = {}) => text(x, y, s, { size: 11, fill: t.faint, ...o });
+  const hide = { opacity: 0 };
+  const win = (ts, f = 0.2) => { // visible in each [t0, t1] window
+    const fr = [[0, 'opacity:0']];
+    ts.forEach(([a, b]) => fr.push([a, 'opacity:0'], [a + f, 'opacity:1'], [b, 'opacity:1'], [b + f, 'opacity:0']));
+    fr.push([D, 'opacity:0']);
+    return { class: 'a', style: L.on(fr), ...hide };
+  };
+  const swap = (x, y, states, o = {}) => states.map(([t0, s, oo = {}], i) => {
+    const last = i === states.length - 1;
+    return lbl(x, y, s, { ...o, ...oo, ...(last ? {} : hide), ...L.sh(t0, last ? null : states[i + 1][0] - 0.2, 0.2) });
+  }).join('');
+  const dot = (pts, t0, t1, hideAt) => el('circle', { cx: 0, cy: 0, r: 2.5, fill: t.ember, ...hide, class: 'a', style: L.along(pts, t0, t1, hideAt) });
+
+  A.push(text(856, 14, 'illustrative', { size: 11, fill: t.faint, anchor: 'end' }));
+
+  // ---- the gateway: one self-describing endpoint, loopback ----
+  const GXL = 287, GW = 6, GXc = GXL + GW / 2, GT = 34, GB = 168;
+  A.push(el('rect', { x: GXL, y: GT, width: GW, height: GB - GT, rx: 3, fill: t.soft, stroke: t.line }));
+  A.push(lbl(300, 24, 'GET /.well-known/plexus', { fill: t.muted }), lbl(300, 38, '127.0.0.1:7077'));
+  A.push(lbl(300, 24, 'GET /.well-known/plexus', { fill: t.emberText, ...win([[3.9, 4.6]]) }));
+
+  // ---- local apps, closed; then sliced into capability facets, each with its verb ----
+  const FY = i => 60 + i * 20;
+  const FX = 358, CHX = 530, AX = 660;
+  const F = [
+    ['obsidian.vault.read', 'read', 'std'],
+    ['workspace.read', 'read', 'std'],
+    ['workspace.write', 'write', 'ask'],
+    ['claudecode.run', 'execute', 'ask'],
+    ['codex.run', 'execute', 'ask'],
+    ['apple-notes.notes.create', 'write', 'off'],
+  ];
+  const APPS = [['Obsidian', 0, 1], ['Workspace', 1, 2], ['Claude Code', 3, 1], ['Codex', 4, 1], ['Apple Notes', 5, 1]];
+  APPS.forEach(([n, r0, rows], k) => {
+    const y = FY(r0) - 9, h = rows * 20 - 2;
+    A.push(g({ class: 'a pop', style: L.on([[[0, 0.4 + k * 0.15], 'opacity:0;transform:scale(.9)'], [[0.8 + k * 0.15, D], 'opacity:1;transform:scale(1)']]) },
+      el('rect', { x: AX, y, width: 856 - AX, height: h, rx: 3, fill: t.soft, stroke: t.faint }) + lbl(AX + 10, y + h / 2 + 4, n, { fill: t.fg })));
+  });
+  F.forEach(([id, verb, st], i) => {
+    const y = FY(i), cw = textW(verb, 11) + 10, t0 = 1.7 + i * 0.2;
+    const peel = [[[0, t0], 'opacity:0;transform:translateX(150px)'], [t0 + 0.6, 'opacity:1;transform:translateX(0)']];
+    if (st === 'off') peel.push([4.3, 'opacity:1;transform:translateX(0)'], [[4.7, D], 'opacity:.4;transform:translateX(0)']);
+    else peel.push([D, 'opacity:1;transform:translateX(0)']);
+    A.push(g({ class: 'a', style: L.on(peel), opacity: st === 'off' ? 0.4 : null },
+      lbl(FX, y + 4, id, { fill: t.fg })
+      + el('rect', { x: CHX, y: y - 7.5, width: r1(cw), height: 15, rx: 7.5, stroke: t.line }) + lbl(CHX + 5, y + 4, verb, { fill: t.muted })
+      + el('path', { d: `M${r1(CHX + cw + 4)},${y}H${AX - 4}`, stroke: t.line })));
+    const hit = ({ 0: [[7.0, 7.5]], 1: [[20.0, 20.5]], 2: [[10.95, 11.45]], 3: [[14.45, 14.95]] })[i];
+    if (hit) A.push(lbl(FX, y + 4, id, { fill: t.emberText, ...win(hit) }));
+  });
+  // gateway -> facet: solid = standing, dashed = approval per use, none = outside the agent's subset
+  const conn = (i, dash, style, extra = {}) => el('path', { d: `M${GXL + GW + 1},${FY(i)}H${FX - 6}`, stroke: dash ? t.faint : t.muted, strokeWidth: dash ? 1 : 1.5, strokeDasharray: dash ? '3 3' : null, class: 'a', style, ...extra });
+  const from = (t0) => L.show(t0, null, 0.35);
+  A.push(conn(0, false, from(4.3)), conn(1, false, from(4.4)), conn(3, true, from(4.6)), conn(4, true, from(4.7)));
+  A.push(conn(2, true, L.on([[[0, 4.5], 'opacity:0'], [[4.8, 10.6], 'opacity:1'], [[10.8, 18.2], 'opacity:0'], [[18.5, D], 'opacity:1']])));
+  A.push(conn(2, false, L.on([[[0, 10.6], 'opacity:0'], [[10.8, 17.9], 'opacity:1'], [[18.2, D], 'opacity:0']]), hide));
+  A.push(text((GXL + GW + FX - 6) / 2, FY(2) + 4, '✕', { size: 11, fill: t.sandText, anchor: 'middle', ...win([[17.9, 18.6]]) }));
+
+  // ---- the agent, through its launcher: DISCOVER -> UNDERSTAND -> GRANTED -> CALL ----
+  const PH = [['DISCOVER', [3.2, 4.3]], ['UNDERSTAND', [4.3, 5.2]], ['GRANTED', [5.2, 6.0]], ['CALL', [6.0, 21.5]]];
+  let px = 24;
+  PH.forEach(([w, ws], k) => {
+    A.push(lbl(px, 24, w, { fill: t.muted }), lbl(px, 24, w, { fill: t.emberText, ...win([ws]) }));
+    px += textW(w, 11);
+    if (k < 3) { A.push(lbl(px + 6.6, 24, '→')); px += 3 * 6.6; }
+  });
+  A.push(el('circle', { cx: 28, cy: 51, r: 3.5, fill: t.ember }), lbl(37, 55, 'agent a1', { fill: t.emberText }), lbl(100, 55, '· launcher plexus-a1'));
+  A.push(el('rect', { x: 24, y: 63, width: 258, height: 42, rx: 4, stroke: t.line }));
+  const CMD = [[3.2, 'list'], [6.0, 'obsidian.vault.read'], [8.6, 'workspace.write'], [12.4, 'claudecode.run'], [15.8, 'apple-notes.notes.create'], [19.0, 'workspace.read']];
+  CMD.forEach(([t0, c], k) => {
+    const s = `$ plexus-a1 ${c}`, last = k === CMD.length - 1, t1 = last ? null : CMD[k + 1][0] - 0.2;
+    A.push(g({ ...(last ? {} : hide), ...L.sh(t0, t1, 0.15) },
+      lbl(32, 80, s, { fill: t.fg, class: 'a', style: L.on([[[0, t0 + 0.05], `clip-path:inset(0 100% 0 0);animation-timing-function:steps(${s.length - 11},end)`], [[t0 + 0.5, D], 'clip-path:inset(0 0 0 0)']]) })));
+  });
+  const RES = [[4.5, 5.8, '2 standing · 3 need approval'], [7.6, 8.4, 'ok'], [9.5, 11.35, 'pending · owner approval'], [11.55, 12.2, 'ok · granted 1h'],
+    [13.3, 14.85, 'pending · owner approval'], [15.05, 15.6, 'ok · approved once'], [16.9, 18.8, 'denied · not in authorized subset'], [20.6, null, 'ok']];
+  RES.forEach(([t0, t1, r]) => A.push(lbl(32, 97, r, { fill: r.startsWith('denied') ? t.fg : t.muted, ...(t1 === null ? {} : hide), ...L.sh(t0, t1, 0.2) })));
+
+  // calls: launcher -> gateway -> facet, and back
+  const P0 = [282, 76], G = i => [GXc, FY(i)], Fp = i => [FX - 8, FY(i)];
+  A.push(dot([P0, [GXc, GT + 4]], 3.6, 3.95, 4.0));
+  const round = (i, t0, tg = null, tc = null) => {
+    if (tg === null) {
+      A.push(dot([P0, G(i), Fp(i)], t0, t0 + 0.5, t0 + 0.55), dot([Fp(i), G(i), P0], t0 + 0.65, t0 + 1.1, t0 + 1.15));
+    } else {
+      A.push(dot([P0, G(i)], t0, t0 + 0.3, tc), dot([G(i), Fp(i)], tc, tc + 0.25, tc + 0.3), dot([Fp(i), G(i), P0], tc + 0.45, tc + 0.85, tc + 0.9));
+      A.push(el('circle', { cx: GXc, cy: FY(i), r: 7, stroke: t.muted, strokeDasharray: '2 2', ...win([[tg, tc]]) }));
+    }
+  };
+  round(0, 6.5);
+  round(2, 9.1, 9.4, 10.7);
+  round(3, 12.9, 13.2, 14.2);
+  round(1, 19.5);
+  // off-subset: bounces at the gateway
+  A.push(dot([P0, G(5)], 16.4, 16.7, 16.75), dot([G(5), [250, FY(5) - 8]], 16.75, 17.1, 17.2));
+  A.push(text(GXc - 10, FY(5) + 4, '✗', { size: 12, fill: t.fg, anchor: 'end', ...win([[16.7, 17.7]]) }));
+
+  // ---- the owner approves: write with a trust window, execute per call ----
+  A.push(el('circle', { cx: 28, cy: 124, r: 3.5, fill: t.sand }), lbl(37, 128, 'owner', { fill: t.sandText }), lbl(77, 128, '· trust window'));
+  const TW = ['once', '1h', '1d', '7d', 'until-revoked'];
+  let cx = 24;
+  const chip = {};
+  TW.forEach(w => {
+    const cw = textW(w, 11) + 10;
+    chip[w] = [cx, cw];
+    A.push(el('rect', { x: r1(cx), y: 136, width: r1(cw), height: 15, rx: 7.5, stroke: t.line }), lbl(cx + 5, 147, w, { fill: t.muted }));
+    cx += cw + 4;
+  });
+  const pick = (w, ws) => { const [x, cw] = chip[w]; A.push(g(win(ws), el('rect', { x: r1(x), y: 136, width: r1(cw), height: 15, rx: 7.5, fill: t.sand, fillOpacity: 0.18, stroke: t.sand }) + lbl(x + 5, 147, w, { fill: t.sandText }))); };
+  pick('1h', [[9.9, 10.9]]);
+  pick('once', [[13.5, 14.4]]);
+  const appr = (i, t0) => {
+    const d = `M${r1(cx + 2)},143.5C${r1(cx + 20)},143.5 ${GXL - 18},${FY(i)} ${GXL - 2},${FY(i)}`;
+    A.push(el('path', { d, stroke: t.sand, strokeWidth: 1.25, ...win([[t0, t0 + 0.8]]) }));
+  };
+  appr(2, 10.1);
+  appr(3, 13.6);
+
+  // ---- authorization and audit as their own lanes ----
+  const LY0 = 208, LS = 13;
+  A.push(lbl(24, 186, 'GET /grants', { fill: t.muted }), el('path', { d: 'M24,191.5H360', stroke: t.line }));
+  const GR = [[5.2, 'obsidian.vault.read', 'read', '7d', 'standing'], [5.4, 'workspace.read', 'read', '1d', 'standing'], [10.6, 'workspace.write', 'write', '1h', null]];
+  GR.forEach(([t0, id, verb, w, st], k) => {
+    const y = LY0 + k * LS;
+    A.push(g(L.sh(t0), lbl(24, y, id, { fill: t.fg }) + lbl(186, y, verb, { fill: t.muted }) + lbl(232, y, w, { fill: t.muted })
+      + (st ? lbl(262, y, st, { fill: t.muted }) : swap(262, y, [[t0, 'approved'], [17.9, 'revoked', { fill: t.fg }]], { fill: t.muted }))));
+  });
+  const ry = LY0 + 2 * LS - 4;
+  A.push(el('path', { d: `M24,${ry}H252`, stroke: t.muted, class: 'gx a', style: L.on([[[0, 17.8], 'transform:scaleX(0)'], [[18.2, D], 'transform:scaleX(1)']]) }));
+  A.push(text(318, LY0 + 2 * LS, '✕', { size: 11, fill: t.sandText, class: 'a pop', style: L.on([[[0, 17.6], 'opacity:0;transform:scale(.4)'], [[17.9, D], 'opacity:1;transform:scale(1)']]) }));
+  css.push('.gx{transform-box:fill-box;transform-origin:left}');
+
+  A.push(lbl(400, 186, 'audit', { fill: t.muted }), el('path', { d: 'M400,191.5H856', stroke: t.line }));
+  const AU = [[4.5, 'list', 'ok'], [7.6, 'obsidian.vault.read', 'ok · standing'], [9.5, 'workspace.write', 'pending'], [11.55, 'workspace.write', 'approved 1h · ok'],
+    [15.05, 'claudecode.run', 'approved once · ok'], [16.9, 'apple-notes.notes.create', 'denied · off-subset'], [18.0, 'workspace.write', 'grant revoked'], [20.6, 'workspace.read', 'ok · standing']];
+  AU.forEach(([t0, id, res], k) => {
+    const y = LY0 + k * LS;
+    A.push(g(L.sh(t0, null, 0.25), lbl(400, y, String(k + 1).padStart(2, '0')) + lbl(424, y, id, { fill: t.fg }) + lbl(600, y, res, { fill: res.startsWith('denied') ? t.fg : t.muted })));
+  });
+
+  return svg({
+    w: W, h: H, title: 'Plexus: a local capability gateway for agents',
+    desc: 'Illustrative. Local apps (Obsidian, a workspace folder, Claude Code, Codex, Apple Notes) appear as closed boxes, then Plexus slices each into capability facets with a verb: obsidian.vault.read (read), workspace.read (read), workspace.write (write), claudecode.run (execute), codex.run (execute), apple-notes.notes.create (write). One self-describing endpoint, GET /.well-known/plexus, on loopback 127.0.0.1:7077. An agent goes DISCOVER, UNDERSTAND, GRANTED, CALL through its launcher plexus-a1: list shows two standing reads and three capabilities that need approval; apple-notes.notes.create is outside its authorized subset. A read flows on its standing grant. A write pends until the owner approves it with a 1h trust window. An execute is approved once, per call. A call outside the subset bounces at the gateway. The owner revokes the workspace.write grant and only that grant goes; the next read still flows. The grants ledger (GET /grants) and the audit log append as each of these happens.',
+    css: css.join('') + L.css(), body: g(L.wrap(), A.join('')),
+  });
+}
+
 // ---------- memory: Nemori's episodic pipeline and the predict–calibrate loop ----------
 
 function renderMemory(theme) {
@@ -839,6 +1211,10 @@ export function renderVisuals() {
     ['pkc-dark.svg', renderPKC('dark')],
     ['omne-light.svg', renderOmne('light')],
     ['omne-dark.svg', renderOmne('dark')],
+    ['fold-light.svg', renderFold('light')],
+    ['fold-dark.svg', renderFold('dark')],
+    ['plexus-light.svg', renderPlexus('light')],
+    ['plexus-dark.svg', renderPlexus('dark')],
     ['stack-light.svg', renderStack('light')],
     ['stack-dark.svg', renderStack('dark')],
     ['memory-light.svg', renderMemory('light')],

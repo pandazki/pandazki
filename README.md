@@ -63,11 +63,22 @@ A compiler for a personal knowledge library — meetings, documents, chats, emai
 
 **[Nemori](https://github.com/nemori-ai/nemori)** ([paper](https://arxiv.org/abs/2508.03341)) · Self-organising long-term memory for agents. What should the unit of memory be? Nemori's answer is the human episode: it segments dialogue along event boundaries, then uses predict–calibrate to distil new knowledge from the gap between expectation and reality.
 
-- **[fold-skill](https://github.com/nemori-ai/fold-skill)** · Attention, maintained by an agent — when someone comes back after time away, what should they see first? Inputs from many channels become one uniform form; an agent estimates and trades them off in context, keeping a structured state under an attention budget. One state, twelve forms of expression.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/fold-dark.svg">
+  <img alt="An illustrative pass of fold-skill: inputs from several channels become one uniform form, an agent assigns each item a tier, shares fill a fixed budget of 64 and lower items yield when something more important arrives, a person's note is acknowledged on the next pass, and the same state is rendered in several forms side by side." src="assets/fold-light.svg" width="100%">
+</picture>
+
+**[fold-skill](https://github.com/nemori-ai/fold-skill)** · Attention, maintained by an agent — when someone comes back after time away, what should they see first? Inputs from many channels become one uniform form; an agent estimates and trades them off in context, keeping a structured state under an attention budget. One state, twelve forms of expression.
 
 ### Agent infrastructure
 
-- **[plexus](https://github.com/nemori-ai/plexus)** · An agent-native, self-describing gateway for local capabilities — exposes the software on your machine as semantic facets, and makes authorization and audit domain primitives.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/plexus-dark.svg">
+  <img alt="An illustrative run of plexus: local apps are sliced into capability facets with read, write and execute verbs behind one self-describing endpoint; an agent discovers and calls them, a read flows on a standing grant, a write waits for the owner's approval, a call outside the agent's subset bounces, a grant is revoked, and every step lands in the grants ledger and the audit log." src="assets/plexus-light.svg" width="100%">
+</picture>
+
+**[plexus](https://github.com/nemori-ai/plexus)** · An agent-native, self-describing gateway for local capabilities — exposes the software on your machine as semantic facets, and makes authorization and audit domain primitives.
+
 - **[cc-master](https://github.com/nemori-ai/cc-master)** · An orchestration layer for long-horizon work — promotes a coding-agent session to project lead: the task graph survives context resets, thousands of schedule simulations estimate the ship date, and decisions come back to you only when they need your judgment.
 - **[Advanced Agentic Dev Patterns](https://panqiwei.github.io/advanced-agentic-dev-patterns/en/)** · A book on agentic systems engineering · co-author: [@panqiwei](https://github.com/PanQiWei)
 - **[code-journal](https://github.com/pandazki/code-journal)** · A local almanac of human–agent programming — rebuilds what actually happened from session transcripts, and finds the moments where the human, not the agent, set the direction.

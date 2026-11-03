@@ -63,11 +63,22 @@ bunx pneuma-skills slide --workspace ./my-first-pneuma-slide
 
 **[Nemori](https://github.com/nemori-ai/nemori)**（[论文](https://arxiv.org/abs/2508.03341)）· Agent 的自组织长期记忆。记忆该以什么粒度组织？Nemori 的答案是人类的情景记忆：依事件分割理论把对话切成情景，再以预测—校准机制，从预期与现实的偏差中提炼新知识。
 
-- **[fold-skill](https://github.com/nemori-ai/fold-skill)** · Agent 驱动的注意力整理——人离开再回来，最先该看到什么？多渠道信息被统一为同构输入，由 agent 结合上下文估计与取舍，维护成一份带注意力预算的结构化状态；同一份状态，十二种表达形式。
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/fold-dark.svg">
+  <img alt="fold-skill 的示意动画：多个渠道的信息转成同构输入，agent 给每件事定档，份额填进 64 份的固定预算，更重要的事进来时其余让位；人留下的批注在下一轮整理中被确认，同一份状态并排呈现为几种表达形式。" src="assets/fold-light.svg" width="100%">
+</picture>
+
+**[fold-skill](https://github.com/nemori-ai/fold-skill)** · Agent 驱动的注意力整理——人离开再回来，最先该看到什么？多渠道信息被统一为同构输入，由 agent 结合上下文估计与取舍，维护成一份带注意力预算的结构化状态；同一份状态，十二种表达形式。
 
 ### Agent 基础设施
 
-- **[plexus](https://github.com/nemori-ai/plexus)** · Agent-Native 本地能力自描述网关——以语义切面暴露本机软件，将授权与审计内化为领域原语。
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/plexus-dark.svg">
+  <img alt="plexus 的示意动画：本机应用被切成带读、写、执行动词的能力切面，统一挂在一个自描述端点后；agent 发现并调用它们，读取走常驻授权，写入等待所有者批准，越出授权子集的调用被弹回，一条授权被撤销，每一步都记入授权台账与审计日志。" src="assets/plexus-light.svg" width="100%">
+</picture>
+
+**[plexus](https://github.com/nemori-ai/plexus)** · Agent-Native 本地能力自描述网关——以语义切面暴露本机软件，将授权与审计内化为领域原语。
+
 - **[cc-master](https://github.com/nemori-ai/cc-master)** · 长程任务的编排层——把一个 coding agent 会话升格为项目负责人：任务图跨越上下文重置持续存在，数千次排期模拟估算交付时间，只在真正需要判断时把决策交还给人。
 - **[Advanced Agentic Dev Patterns](https://panqiwei.github.io/advanced-agentic-dev-patterns/zh/)** · 一本关于 agentic 系统工程的书 · co-author: [@panqiwei](https://github.com/PanQiWei)
 - **[code-journal](https://github.com/pandazki/code-journal)** · 人机协作编程的本地年鉴——从会话转录中重建每天真正发生了什么，并定位那些由人而非 agent 决定方向的时刻。
