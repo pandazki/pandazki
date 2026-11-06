@@ -1,5 +1,5 @@
 {
-  "asOf": "2026-11-02",
+  "asOf": "2026-11-06",
   "months": [
     {
       "month": "2024-01",
@@ -139,14 +139,14 @@
     }
   ],
   "lastYear": {
-    "commits": 2448,
-    "prs": 326,
-    "private": 2661,
+    "commits": 2534,
+    "prs": 341,
+    "private": 3000,
     "repos": [
       {
         "owner": "pandazki",
         "name": "pneuma-skills",
-        "commits": 1014
+        "commits": 1084
       },
       {
         "owner": "pandazki",
@@ -166,7 +166,7 @@
       {
         "owner": "pandazki",
         "name": "pneuma-knowledge-compiler",
-        "commits": 103
+        "commits": 104
       },
       {
         "owner": "pandazki",
@@ -176,7 +176,7 @@
       {
         "owner": "nemori-ai",
         "name": "fold-skill",
-        "commits": 58
+        "commits": 70
       },
       {
         "owner": "Shanda-Group-Ltd",
@@ -199,9 +199,19 @@
         "commits": 9
       },
       {
+        "owner": "pandazki",
+        "name": "pandazki",
+        "commits": 6
+      },
+      {
         "owner": "nemori-ai",
         "name": "skills",
         "commits": 6
+      },
+      {
+        "owner": "nemori-ai",
+        "name": "omne-harness-lite",
+        "commits": 3
       },
       {
         "owner": "pandazki",
@@ -211,16 +221,6 @@
       {
         "owner": "LLM-Evaluation-s-Always-Fatiguing",
         "name": "leaf-next",
-        "commits": 3
-      },
-      {
-        "owner": "nemori-ai",
-        "name": "omne-harness-lite",
-        "commits": 3
-      },
-      {
-        "owner": "pandazki",
-        "name": "pandazki",
         "commits": 3
       },
       {
