@@ -16,7 +16,7 @@ const START_YEAR = 2024;
 const TOP_REPOS = 9;
 
 // Facts that don't come from the contribution API. Update by hand when they change.
-const PNEUMA_MODES = 21; // pneuma-skills modes/ directory
+const PNEUMA_MODES = 22; // pneuma-skills modes/ directory
 const AGENT_BACKENDS = 3; // Claude Code, Codex, Kimi Code
 
 // ---------- data ----------
