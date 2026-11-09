@@ -12,7 +12,7 @@
   <img alt="A concept animation for Pneuma: a sealed app comes apart into a capability graph, an agent trace runs through it, a person steps in and bends its path, preferences settle along the base, and after a gate the result forks into differently shaped variants." src="assets/pneuma-concept-light.svg" width="100%">
 </picture>
 
-The Pneuma family is an experiment in re-architecting software for the agent-native era. Once agents do most of the execution, distribution, domain modelling, change governance and knowledge all have to be redesigned; each repository rebuilds one of those layers.
+The Pneuma family is an experiment in re-architecting software for the agent-native era. Once agents do most of the execution, distribution, domain modelling, change governance, knowledge and hosting all have to be redesigned; each repository rebuilds one of those layers.
 
 #### [pneuma-skills](https://github.com/pandazki/pneuma-skills)
 
@@ -34,6 +34,15 @@ bunx pneuma-skills slide --workspace ./my-first-pneuma-slide
 </picture>
 
 A compiler for a personal knowledge library — meetings, documents, chats, email and your coding-agent sessions are treated as source and compiled, under a compile contract, into a Git-versioned library. Every claim is anchored to its source span, and four access levels run in parallel (L0 verbatim, L1 lexical, L2 semantic, L3 canonical claims): search it, question it, or call it by voice.
+
+#### [pneuma-space](https://github.com/pandazki/pneuma-space)
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/space-dark.svg">
+  <img alt="An illustrative view of pneuma-space: one machine holds a large field of small apps, almost all asleep. An agent publishes a directory and a new app appears without an image build; a visitor's request passes the gateway and wakes one app, its capability edges light up, and it goes back to sleep with its data kept. A hung app is stopped and quarantined while its neighbours keep answering." src="assets/space-light.svg" width="100%">
+</picture>
+
+A self-hosted home for what agents build — no agent inside, yet designed for the long tail of small, stateful apps that agents write. An app is a directory whose manifest names the infrastructure it needs; publishing is an upload, not a build. The first request wakes it, idleness puts it to sleep, and its data outlives every sleep and release. A hung app is quarantined while its neighbours keep answering.
 
 #### pneuma-craft · pneuma-framework
 

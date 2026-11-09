@@ -12,7 +12,7 @@
   <img alt="Pneuma 的概念动画：封闭的 app 拆解成一张能力图，agent 的轨迹穿过其中，人在途中介入并改变路径，偏好沉淀下来；改动通过关卡后，fork 成几种不同形态的变体。" src="assets/pneuma-concept-light.svg" width="100%">
 </picture>
 
-Pneuma 家族是对 agent-native 时代软件形态的一次重构实验。当 agent 成为软件的主要执行者，分发、领域建模、变更治理与知识沉淀都需要重新设计；每个仓库各自重写其中一层。
+Pneuma 家族是对 agent-native 时代软件形态的一次重构实验。当 agent 成为软件的主要执行者，分发、领域建模、变更治理、知识沉淀与应用承载都需要重新设计；每个仓库各自重写其中一层。
 
 #### [pneuma-skills](https://github.com/pandazki/pneuma-skills)
 
@@ -34,6 +34,15 @@ bunx pneuma-skills slide --workspace ./my-first-pneuma-slide
 </picture>
 
 个人知识库的编译器——会议、文档、聊天、邮件与你的 coding-agent 会话都被当作源码，按编译契约编译成 Git 版本化的知识库。每条主张锚定到原文片段；L0 原文、L1 词法、L2 语义、L3 正本主张四层并行可达——可检索、可追问，也可语音直连。
+
+#### [pneuma-space](https://github.com/pandazki/pneuma-space)
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/space-dark.svg">
+  <img alt="pneuma-space 的示意动画：一台机器上承载着一大片小应用，几乎全部在休眠。agent 发布一个目录，不构建镜像就多出一个应用；访客的请求穿过网关唤醒其中一个，它声明的能力连线随之亮起，闲置后重新休眠，数据保留。一个卡死的应用被停掉并隔离，周围的应用照常应答。" src="assets/space-light.svg" width="100%">
+</picture>
+
+为 agent 造物而生的自托管应用底座——平台里没有 agent，却是为 agent 写出的长尾小应用而设计。应用即目录，清单声明它所需的基础设施；发布是一次上传而非构建，首个请求唤醒，闲置即休眠，数据跨越每一次休眠与发布。一个应用卡死，被单独隔离，邻居照常应答。
 
 #### pneuma-craft · pneuma-framework
 

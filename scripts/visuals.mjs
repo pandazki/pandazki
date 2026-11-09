@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Illustrative animated pieces (no live data): the Pneuma concept, the replay, the knowledge compiler,
-// pneuma-craft + pneuma-framework, omne-harness-lite runtime continuity, Fold, Plexus, Nemori memory.
+// pneuma-craft + pneuma-framework, omne-harness-lite runtime continuity, Fold, Plexus, PneumaSpace, Nemori memory.
 //   node scripts/visuals.mjs   renders just these (render.mjs renders them too)
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -1082,6 +1082,195 @@ function renderPlexus(theme) {
   });
 }
 
+// ---------- space: one host, a field of small apps, almost all asleep; publish, wake, sleep, quarantine ----------
+
+function renderSpace(theme) {
+  const t = THEMES[theme];
+  const W = 880, H = 304, D = 25;
+  const L = new Loop(D);
+  const A = [];
+  const bg = theme === 'dark' ? '#0d1117' : '#ffffff';
+  const css = ['.pop{transform-box:fill-box;transform-origin:center}'];
+  const lbl = (x, y, s, o = {}) => text(x, y, s, { size: 11, fill: t.faint, ...o });
+  const hide = { opacity: 0 }; // transient: hidden in the still (reduced-motion) frame
+  const win = (ts, f = 0.2) => {
+    const fr = [[0, 'opacity:0']];
+    ts.forEach(([a, b]) => fr.push([a, 'opacity:0'], [a + f, 'opacity:1'], [b, 'opacity:1'], [b + f, 'opacity:0']));
+    fr.push([D, 'opacity:0']);
+    return { class: 'a', style: L.on(fr), ...hide };
+  };
+  // a dot carried through timed waypoints [[t, x, y], ...], visible only while moving
+  const mover = (pts, color, r = 2.5) => {
+    const at = (x, y) => `transform:translate(${r1(x)}px,${r1(y)}px)`;
+    const [t0, x0, y0] = pts[0], [t1, x1, y1] = pts.at(-1);
+    const fr = [[[0, t0 - 0.01], `${at(x0, y0)};opacity:0`]];
+    pts.forEach(([tt, x, y]) => fr.push([tt, `${at(x, y)};opacity:1;animation-timing-function:linear`]));
+    fr.push([[t1 + 0.12, D], `${at(x1, y1)};opacity:0`]);
+    return el('circle', { cx: 0, cy: 0, r, fill: color, ...hide, class: 'a', style: L.on(fr) });
+  };
+  const ring = (c, t0, color) => el('rect', { x: c.x - 3, y: c.y - 3, width: 16, height: 16, rx: 2, stroke: color, strokeWidth: 1.5, ...hide, class: 'a pop',
+    style: L.on([[[0, t0], 'opacity:0;transform:scale(.6)'], [t0 + 0.25, 'opacity:1;transform:scale(1)'], [[t0 + 0.9, D], 'opacity:0;transform:scale(1.5)']]) });
+  // a name tag laid over the field while something happens to a cell
+  const tag = (x, y, s, ws, end = false) => {
+    const w = textW(s, 11) + 8, x0 = end ? x - w : x;
+    return g(win(ws), el('rect', { x: r1(x0), y: y - 11, width: r1(w), height: 15, rx: 2, fill: bg, stroke: t.line }) + lbl(x0 + 4, y, s, { fill: t.fg }));
+  };
+
+  A.push(text(856, 14, 'illustrative', { size: 11, fill: t.faint, anchor: 'end' }));
+
+  // ---- the host: one machine, a field of app cells ----
+  const X0 = 290, Y0 = 52, P = 14, COLS = 23, ROWS = 12;
+  const cell = (c, r) => ({ x: X0 + c * P, y: Y0 + r * P, cx: X0 + c * P + 5, cy: Y0 + r * P + 5 });
+  A.push(text(280, 34, tspan('one host', t.fg) + tspan(' · 127.0.0.1:8080/apps/<name>/', t.faint), { size: 11, raw: true }));
+  A.push(el('rect', { x: 280, y: 40, width: 338, height: 188, rx: 4, stroke: t.line }));
+  const board = cell(0, 11), pulse = cell(9, 8), docs = cell(4, 4), spin = cell(16, 3), survey = cell(15, 3), ttt = cell(17, 3), held = cell(20, 9);
+  const key = c => `${c.x},${c.y}`;
+  const named = new Set([board, pulse, docs, spin, survey, ttt, held].map(key));
+  const rnd = rng(23);
+  const all = [];
+  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) all.push(cell(c, r));
+  const free = all.filter(c => !named.has(key(c)));
+  const pick = n => Array.from({ length: n }, () => free.splice(Math.floor(rnd() * free.length), 1)[0]);
+  const statics = [docs, ...pick(16)], blink = pick(12);
+  const staticSet = new Set(statics.map(key));
+  const outline = cs => { let d = '', px = 0, py = 0; cs.forEach((c, i) => { d += i ? `m${c.x - px},${c.y - py}h9v9h-9z` : `M${c.x + 0.5},${c.y + 0.5}h9v9h-9z`; px = c.x; py = c.y; }); return d; };
+  A.push(el('path', { d: outline(all.filter(c => !staticSet.has(key(c)) && key(c) !== key(board))), stroke: t.line }));
+  A.push(el('path', { d: outline(statics), stroke: t.line, strokeDasharray: '2 1.5' }));
+  const fill = (c, o) => el('rect', { x: c.x, y: c.y, width: 10, height: 10, fill: t.muted, ...o });
+  // other visitors: a few cells wake and sleep; one stays awake on an open connection
+  blink.forEach((c, i) => {
+    const a = 0.8 + rnd() * 17, b = a + 1.2 + rnd() * 1.8;
+    const ws = [[a, b]];
+    if (i % 3 === 0) { const a2 = b + 2 + rnd() * 2; if (a2 + 1.5 < 21.4) ws.push([a2, a2 + 1.5]); }
+    A.push(fill(c, { fillOpacity: 0.55, ...win(ws, 0.3) }));
+  });
+  A.push(fill(held, {}));
+
+  // ---- shared services under the host ----
+  const SV = [['kv · redis', 280], ['object · s3', 366], ['db() · sqlite|postgres', 459]].map(([s, x]) => ({ s, x, w: textW(s, 11) + 12 }));
+  A.push(lbl(272, 258, 'shared · a name per app', { anchor: 'end' }));
+  SV.forEach(v => A.push(el('rect', { x: v.x, y: 246, width: r1(v.w), height: 16, rx: 3, stroke: t.line }), lbl(v.x + 6, 258, v.s, { fill: t.muted })));
+  const svHi = (v, ws) => A.push(g(win(ws), el('rect', { x: v.x, y: 246, width: r1(v.w), height: 16, rx: 3, stroke: t.fg, strokeWidth: 1.25 }) + lbl(v.x + 6, 258, v.s, { fill: t.fg })));
+  const LIT = [[4.5, 6.8], [8.95, 10.2]];
+  // board's declared capability edges: always bound, lit while it is awake
+  SV.forEach(v => {
+    const ex = r1(v.x + v.w / 2), d = `M${board.cx},${board.y + 10}C${board.cx},234 ${ex},232 ${ex},246`;
+    A.push(el('path', { d, stroke: t.line }), el('path', { d, stroke: t.muted, strokeWidth: 1.5, ...win(LIT) }));
+  });
+  svHi(SV[0], LIT); svHi(SV[2], LIT); svHi(SV[1], [[4.5, 8.7], [9.0, 10.2]]);
+
+  // ---- the gateway: every request takes the same path ----
+  const GX = 200, GC = 231, STG = [['ingress', 52], ['identity', 74], ['static', 96], ['wake', 118]];
+  A.push(lbl(GX, 34, 'gateway'));
+  STG.forEach(([s, cy]) => A.push(el('rect', { x: GX, y: cy - 8, width: 62, height: 16, rx: 3, stroke: t.line }), lbl(GC, cy + 4, s, { anchor: 'middle', fill: t.muted })));
+  A.push(el('rect', { x: GX, y: 134, width: 62, height: 16, rx: 3, stroke: t.line, strokeDasharray: '2 2' }), lbl(GC, 146, 'Guard', { anchor: 'middle' }));
+  const hiWins = { ingress: [], identity: [], static: [], wake: [] };
+
+  // ---- the visitor's requests ----
+  A.push(el('circle', { cx: 28, cy: 48, r: 3.5, fill: t.sand }), lbl(37, 52, 'visitor', { fill: t.sandText }));
+  const S0 = [162, 66];
+  const REQ = [
+    { c: board, n: 'board', t: 3.1, wake: [3.7, 4.0], to: 4.3 },
+    { c: board, n: 'board', t: 8.2, wake: [8.6, 8.65], to: 8.9 },
+    { c: pulse, n: 'pulse-go', t: 9.6, wake: [10.2, 10.4], to: 10.7 },
+    { c: docs, n: 'docs', t: 11.1, stat: true },
+    { c: spin, n: 'spin', t: 12.6, wake: [13.2, 13.3], to: 13.6 },
+    { c: survey, n: 'survey', t: 17.8, wake: [18.4, 18.45], to: 18.7 },
+    { c: ttt, n: 'ttt', t: 18.6, wake: [19.2, 19.25], to: 19.5 },
+  ];
+  REQ.forEach((q, k) => {
+    const s = `GET /apps/${q.n}/`, t0 = q.t - 0.45, last = k === REQ.length - 1, t1 = last ? null : REQ[k + 1].t - 0.65;
+    A.push(g({ ...(last ? {} : hide), ...L.sh(t0, t1, 0.15) },
+      lbl(24, 70, s, { fill: t.fg, class: 'a', style: L.on([[[0, t0 + 0.05], `clip-path:inset(0 100% 0 0);animation-timing-function:steps(${s.length},end)`], [[t0 + 0.4, D], 'clip-path:inset(0 0 0 0)']]) })));
+    const pts = [[q.t, ...S0], [q.t + 0.15, GC, 52], [q.t + 0.3, GC, 74], [q.t + 0.45, GC, 96]];
+    hiWins.ingress.push([q.t + 0.08, q.t + 0.3]); hiWins.identity.push([q.t + 0.23, q.t + 0.45]);
+    if (q.stat) {
+      pts.push([q.t + 0.6, GC, 96], [q.t + 0.85, GC, 52], [q.t + 1.0, ...S0]);
+      hiWins.static.push([q.t + 0.38, q.t + 0.85]);
+    } else {
+      pts.push([q.wake[0], GC, 118], [q.wake[1], GC, 118], [q.wake[1] + 0.05, 262, 118], [q.to, q.c.cx, q.c.cy]);
+      hiWins.static.push([q.t + 0.38, q.t + 0.55]); hiWins.wake.push([q.wake[0] - 0.07, q.wake[1] + 0.1]);
+    }
+    A.push(mover(pts, t.sand));
+  });
+  STG.forEach(([s, cy]) => A.push(g(win(hiWins[s], 0.08), el('rect', { x: GX, y: cy - 8, width: 62, height: 16, rx: 3, stroke: t.fg, strokeWidth: 1.25 }) + lbl(GC, cy + 4, s, { anchor: 'middle', fill: t.fg }))));
+
+  // ---- the agent publishes a directory: an upload, no image build ----
+  A.push(el('circle', { cx: 28, cy: 150, r: 3.5, fill: t.ember }), lbl(37, 154, 'agent', { fill: t.emberText }));
+  A.push(lbl(24, 172, 'board/', { fill: t.fg, ...hide, ...L.sh(0.6, 19.6, 0.2) }), lbl(24, 172, 'spin/', { fill: t.fg, ...L.sh(19.8, null, 0.2) }));
+  A.push(lbl(24, 186, '├ pneuma-space.json', { fill: t.muted, ...L.sh(0.8) }), lbl(24, 200, '└ src/server.ts', { fill: t.muted, ...L.sh(1.0) }));
+  A.push(lbl(24, 218, 'upload · no image build', { fill: t.emberText, ...L.sh(1.3) }), lbl(24, 232, 'scaffold: live in 6.9 s', L.sh(1.5)));
+  const pubPath = (c, t0, t1, via) => {
+    const pts = bezPoints([156, 188], via[0], via[1], [c.cx, c.cy], 14);
+    A.push(el('circle', { cx: 0, cy: 0, r: 2.5, fill: t.ember, ...hide, class: 'a', style: L.along(pts, t0, t1, t1 + 0.05) }));
+  };
+  pubPath(board, 1.4, 2.2, [[210, 192], [262, 211]]);
+  A.push(el('rect', { x: board.x + 0.5, y: board.y + 0.5, width: 9, height: 9, stroke: t.line, class: 'a pop',
+    style: L.on([[[0, 2.2], 'opacity:0;transform:scale(.3)'], [[2.5, D], 'opacity:1;transform:scale(1)']]) }));
+  A.push(ring(board, 2.2, t.ember));
+  A.push(tag(board.x - 4, board.y - 6, 'board · asleep until visited', [[2.4, 3.6]]));
+
+  // ---- board: first wake, capabilities lit, ws held open; bytes skip it; then asleep, data kept ----
+  A.push(fill(board, win([[4.3, 7.0], [8.9, 10.2]], 0.35)));
+  A.push(tag(board.x - 4, board.y - 6, 'awake · db kv object ws', [[4.4, 6.6]]));
+  A.push(el('path', { d: `M262,118C282,132 292,180 ${board.cx},${board.y}`, stroke: t.sand, strokeDasharray: '3 3', ...win([[4.6, 6.6]]) }));
+  A.push(el('rect', { x: board.cx - 2, y: board.cy - 2, width: 4, height: 4, fill: t.muted, class: 'a', style: L.show(7.3) }));
+  A.push(lbl(272, board.cy + 4, 'data kept', { anchor: 'end', fill: t.muted, ...L.sh(7.3) }));
+  // presigned PUT: browser -> bucket, past the app and the gateway
+  const obj = SV[1], ox = r1(obj.x + obj.w / 2);
+  const route = [[22, 60], [14, 72], [14, 274], [ox, 274], [ox, 263]];
+  A.push(el('path', { d: `M${route.map(p => p.join(',')).join('L')}`, stroke: t.sand, strokeDasharray: '2 3', ...win([[5.2, 8.5]]) }));
+  for (let k = 0; k < 5; k++) A.push(el('circle', { cx: 0, cy: 0, r: 2, fill: t.sand, ...hide, class: 'a', style: L.along(route, 5.3 + k * 0.45, 6.8 + k * 0.45, 6.85 + k * 0.45) }));
+  A.push(lbl(280, 292, 'presigned PUT · bytes skip app and gateway', { fill: t.muted, ...win([[5.3, 8.6]]) }));
+
+  // ---- container wakes, static answers with nothing woken ----
+  A.push(fill(pulse, win([[10.7, 12.6]], 0.3)), tag(pulse.x - 4, pulse.y - 6, 'pulse-go · container', [[10.7, 11.9]]));
+  A.push(tag(docs.x - 4, docs.y - 6, 'docs · static, no process', [[11.5, 12.8]]));
+
+  // ---- a hung worker: stopped, quarantined by the Guard; neighbours keep answering; release 2 ----
+  A.push(fill(spin, win([[13.6, 13.8]], 0.1)));
+  A.push(el('rect', { x: spin.x, y: spin.y, width: 10, height: 10, fill: t.fg, ...win([[13.8, 17.3]], 0.1) }));
+  const pf = [[[0, 13.85], 'opacity:0;transform:scale(1)']];
+  for (let k = 0; k < 4; k++) { const a = 13.9 + k * 0.85; pf.push([a, 'opacity:.9;transform:scale(1)'], [a + 0.7, 'opacity:0;transform:scale(1.9)']); }
+  pf.push([[17.3, D], 'opacity:0;transform:scale(1)']);
+  A.push(el('rect', { x: spin.x - 1, y: spin.y - 1, width: 12, height: 12, rx: 1, stroke: t.fg, ...hide, class: 'a pop', style: L.on(pf) }));
+  A.push(tag(spin.x + 14, spin.y - 6, 'busy loop holds its worker', [[13.8, 17.2]], true));
+  A.push(g(win([[17.6, 21.0]]), el('path', { d: `M${spin.x + 0.5},${spin.y + 0.5}h9v9h-9zm0,0l9,9m0,-9l-9,9`, stroke: t.fg, strokeWidth: 1.25 })));
+  A.push(tag(spin.x + 14, spin.y - 6, 'stopped · quarantined', [[17.5, 20.8]], true));
+  A.push(g(win([[17.5, 21.0]]), el('rect', { x: GX, y: 134, width: 62, height: 16, rx: 3, stroke: t.fg, strokeWidth: 1.25 }) + lbl(GC, 146, 'Guard', { anchor: 'middle', fill: t.fg })));
+  A.push(el('path', { d: `M262,142C380,142 470,124 ${spin.x - 2},${spin.cy + 2}`, stroke: t.fg, strokeDasharray: '2 3', ...win([[17.6, 18.6]]) }));
+  A.push(fill(survey, win([[18.7, 20.6]], 0.3)), fill(ttt, win([[19.5, 21.2]], 0.3)));
+  pubPath(spin, 20.0, 20.9, [[230, 176], [300, 120]]);
+  A.push(ring(spin, 20.9, t.ember), tag(spin.x + 14, spin.y - 6, 'release 2 · data kept', [[21.0, 22.4]], true));
+
+  // ---- events, as the console's lifecycle stream would list them ----
+  A.push(lbl(636, 34, 'events'));
+  const EV = [
+    [2.3, 'publish', 'board', 'no image build'], [4.3, 'wake', 'board', 'first 460–700 ms'], [7.2, 'sleep', 'board', 'idle, data kept'],
+    [8.9, 'wake', 'board', 'again 62–87 ms'], [10.7, 'wake', 'pulse-go', 'about 260 ms'], [11.6, 'static', 'docs', 'nothing woken'],
+    [13.8, 'hang', 'spin', 'busy loop'], [17.3, 'stop', 'spin', '3.5–4 s after'], [17.3, '', '', 'stuck request'], [17.6, 'guard', 'spin', 'quarantined'],
+    [18.7, '200', 'survey', 'unaffected'], [19.5, '200', 'ttt', 'unaffected'], [21.1, 'publish', 'spin', 'release 2'],
+  ];
+  EV.forEach(([t0, v, n, d], k) => {
+    const y = 60 + k * 14;
+    A.push(g(L.sh(t0, null, 0.25), (v ? lbl(636, y, v, { fill: v === 'publish' ? t.emberText : v === 'guard' ? t.fg : t.muted }) : '')
+      + (n ? lbl(688.8, y, n, { fill: t.fg }) : '') + lbl(748.2, y, d, { fill: t.muted })));
+  });
+  // legend
+  A.push(el('rect', { x: 636.5, y: 243.5, width: 9, height: 9, stroke: t.line }), lbl(651, 252, 'asleep'));
+  A.push(el('rect', { x: 712, y: 243, width: 10, height: 10, fill: t.muted }), lbl(727, 252, 'awake'));
+  A.push(el('rect', { x: 636.5, y: 259.5, width: 9, height: 9, stroke: t.line, strokeDasharray: '2 1.5' }), lbl(651, 268, 'static'));
+  A.push(el('path', { d: 'M712.5,259.5h9v9h-9zm0,0l9,9m0,-9l-9,9', stroke: t.muted }), lbl(727, 268, 'quarantined'));
+
+  A.push(lbl(280, 292, 'calm · nearly all asleep · every address valid · all data kept', { fill: t.muted, ...L.sh(22.0) }));
+
+  return svg({
+    w: W, h: H, title: 'PneumaSpace: one host, many sleeping apps',
+    desc: 'Illustrative. One host at 127.0.0.1:8080/apps/<name>/ holds a field of small app cells, almost all asleep; dashed cells are static sites with no process. An agent publishes a directory (pneuma-space.json and src/server.ts) as an upload with no image build (the isolate scaffold is live 6.9 s after publish), and a new cell, board, appears asleep until visited. A visitor request passes the gateway stages ingress, identity, static and wake, and wakes board for the first time (460 to 700 ms); its db, kv and object edges light to the shared services (Redis, an S3 store, SQLite or PostgreSQL behind db()) and a WebSocket stays open through the gateway. Object bytes go from the browser straight to the bucket with a presigned PUT, past the app and the gateway, while board goes idle and sleeps with its data kept. It wakes again in 62 to 87 ms; a container app, pulse-go, wakes in about 260 ms; a static site, docs, is answered by the gateway with nothing woken. Then spin hangs in a busy loop that holds its worker; it is stopped 3.5 to 4 s after the stuck request and the Guard quarantines it, while its neighbours survey and ttt keep answering. A new release of spin replaces it with its data kept. The field is calm again: nearly all asleep, every address valid, all data kept.',
+    css: css.join('') + L.css(), body: g(L.wrap(), A.join('')),
+  });
+}
+
 // ---------- memory: Nemori's episodic pipeline and the predict–calibrate loop ----------
 
 function renderMemory(theme) {
@@ -1215,6 +1404,8 @@ export function renderVisuals() {
     ['fold-dark.svg', renderFold('dark')],
     ['plexus-light.svg', renderPlexus('light')],
     ['plexus-dark.svg', renderPlexus('dark')],
+    ['space-light.svg', renderSpace('light')],
+    ['space-dark.svg', renderSpace('dark')],
     ['stack-light.svg', renderStack('light')],
     ['stack-dark.svg', renderStack('dark')],
     ['memory-light.svg', renderMemory('light')],
