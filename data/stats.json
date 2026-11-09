@@ -1,5 +1,5 @@
 {
-  "asOf": "2026-11-06",
+  "asOf": "2026-11-09",
   "months": [
     {
       "month": "2024-01",
@@ -139,19 +139,24 @@
     }
   ],
   "lastYear": {
-    "commits": 2534,
-    "prs": 341,
-    "private": 3000,
+    "commits": 2964,
+    "prs": 344,
+    "private": 2871,
     "repos": [
       {
         "owner": "pandazki",
         "name": "pneuma-skills",
-        "commits": 1084
+        "commits": 1141
       },
       {
         "owner": "pandazki",
         "name": "pneuma-framework",
         "commits": 622
+      },
+      {
+        "owner": "pandazki",
+        "name": "pneuma-space",
+        "commits": 368
       },
       {
         "owner": "nemori-ai",
@@ -190,6 +195,11 @@
       },
       {
         "owner": "pandazki",
+        "name": "pandazki",
+        "commits": 11
+      },
+      {
+        "owner": "pandazki",
         "name": "lumina",
         "commits": 10
       },
@@ -197,11 +207,6 @@
         "owner": "nemori-ai",
         "name": "cc-master",
         "commits": 9
-      },
-      {
-        "owner": "pandazki",
-        "name": "pandazki",
-        "commits": 6
       },
       {
         "owner": "nemori-ai",
