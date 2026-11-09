@@ -11,14 +11,24 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 // ---------- pneuma-replay: the agent builds a deck, a person steps in, the agent follows ----------
 
-// Its own dark panel, so it reads the same on both GitHub themes.
-const P = {
-  bg: '#0b0e14', chrome: '#10141b', pane: '#0d1118', line: '#1f2631', line2: '#2b3440',
-  fg: '#e6edf3', text: '#c9d1d9', muted: '#8b949e', faint: '#6e7681',
-  ember: '#f0703a', sand: '#d9a86c', slide: '#121821', ink: '#2c3542',
+// A small app window, themed: ink, accents and text tokens come from THEMES; the window's own surfaces
+// (chrome bars, panes, the slide card) are set here. Its background is the GitHub canvas, so it sits flush.
+// Text in ember/sand uses the *Text tokens; tags on an accent fill pick a label colour that reads on it.
+const REPLAY = {
+  dark: {
+    ...THEMES.dark, bg: '#0d1117', chrome: '#12171e', pane: '#0f141b', line: '#1f2631', line2: '#2b3440',
+    text: '#c9d1d9', slide: '#141b24', ink: '#2c3542',
+    tagEmber: THEMES.dark.ember, onEmber: '#0d1117', tagSand: THEMES.dark.sand, onSand: '#0d1117', cursorEdge: '#0d1117',
+  },
+  light: {
+    ...THEMES.light, bg: '#ffffff', chrome: '#f6f8fa', pane: '#f6f8fa', line: THEMES.light.line, line2: '#c5ced7',
+    text: '#31363c', slide: '#ffffff', ink: '#d8dee4',
+    tagEmber: THEMES.light.emberText, onEmber: '#ffffff', tagSand: THEMES.light.sand, onSand: THEMES.light.fg, cursorEdge: THEMES.light.sandText,
+  },
 };
 
-function renderReplay() {
+function renderReplay(theme) {
+  const P = REPLAY[theme];
   const W = 880, H = 400, D = 18;
   const L = new Loop(D);
   const out = [];
@@ -58,7 +68,7 @@ function renderReplay() {
   const CMD = 'bunx pneuma-skills slide --workspace ./launch-deck';
   const cmdX = 32, cmdY = 54, cmdW = CMD.length * CH;
   const T0 = 0.5, T1 = 2.2;
-  A.push(text(16, cmdY, '$', { size: S, fill: P.sand }));
+  A.push(text(16, cmdY, '$', { size: S, fill: P.sandText }));
   A.push(text(cmdX, cmdY, CMD, { size: S, fill: P.fg, fit: cmdW }));
   const typeKf = (from, to) => L.on([
     [[0, T0], `transform:translateX(${from}px);opacity:1;animation-timing-function:steps(${CMD.length},end)`],
@@ -67,7 +77,7 @@ function renderReplay() {
   ]);
   A.push(el('rect', { x: cmdX - 1, y: cmdY - 12, width: cmdW + 10, height: 16, fill: P.bg, opacity: 0, class: 'a', style: typeKf(0, cmdW) }));
   A.push(el('rect', { x: cmdX, y: cmdY - 11, width: CH, height: 14, fill: P.fg, opacity: 0, class: 'a', style: typeKf(0, cmdW) }));
-  A.push(g(L.sh(2.5), text(16, 74, tspan('✓ ', P.muted) + tspan('player live', P.text) + tspan(' · watching ./launch-deck · agent ', P.muted) + tspan('claude-code', P.ember), { size: 11.5, raw: true })));
+  A.push(g(L.sh(2.5), text(16, 74, tspan('✓ ', P.muted) + tspan('player live', P.text) + tspan(' · watching ./launch-deck · agent ', P.muted) + tspan('claude-code', P.emberText), { size: 11.5, raw: true })));
 
   // 2. the agent stream
   const sx = LX + 14, rowY = i => PY + 50 + i * 25;
@@ -83,10 +93,10 @@ function renderReplay() {
     el('rect', { x: sx - 4, y: rowY(3) - 15, width: LW - 20, height: 21, rx: 3, fill: P.sand, opacity: 0.08 })
     + el('rect', { x: sx - 4, y: rowY(3) - 15, width: 2, height: 21, fill: P.sand })
     + el('rect', { x: sx + 0.5, y: rowY(3) - 6.5, width: 5, height: 5, fill: P.sand, transform: `rotate(45 ${sx + 3} ${rowY(3) - 4})` })
-    + text(sx + 14, rowY(3), tspan('you', P.sand, ' font-weight="600"') + tspan('   retitled slide 2', P.text), { size: S, raw: true })
-    + text(LX + LW - 12, rowY(3), 'direct edit', { size: 11.5, fill: P.sand, anchor: 'end', opacity: 0.8 })));
+    + text(sx + 14, rowY(3), tspan('you', P.sandText, ' font-weight="600"') + tspan('   retitled slide 2', P.text), { size: S, raw: true })
+    + text(LX + LW - 12, rowY(3), 'direct edit', { size: 11.5, fill: P.sandText, anchor: 'end', opacity: 0.8 })));
   A.push(g(L.sh(12.0),
-    text(sx, rowY(4) + 4, tspan('↻ ', P.ember) + tspan('saw your edit on slide 2 —', P.fg), { size: S, raw: true })
+    text(sx, rowY(4) + 4, tspan('↻ ', P.emberText) + tspan('saw your edit on slide 2 —', P.fg), { size: S, raw: true })
     + text(sx + 2 * CH, rowY(4) + 22, 'updating the subtitle to match', { size: S, fill: P.fg })));
   A.push(tool(5.9, 13.2, 'Edit', 'slides/02-problem.html', '+1 −1'));
   const IDLE = '· waiting for input';
@@ -121,14 +131,14 @@ function renderReplay() {
   const px = SX + 22;
   const kick = (c, o) => text(px, SY + 30, '02 — PROBLEM', { size: 11, fill: c, sans: true, weight: 600, ...o });
   A.push(kick(P.muted, { opacity: 0, class: 'a', style: L.show(5.3, 7.9, 0.3) }));
-  A.push(kick(P.ember, { class: 'a', style: L.show(7.8, null, 0.4) }));
+  A.push(kick(P.emberText, { class: 'a', style: L.show(7.8, null, 0.4) }));
   const TITLE1 = 'Problem statement', TITLE2 = 'Review comes too late';
   const titleY = SY + 62;
   A.push(text(px, titleY, TITLE1, { size: 22, fill: P.fg, weight: 600, sans: true, opacity: 0, class: 'a', style: L.show(5.5, 10.25, 0.3) }));
   // person's selection, then the new title + caret
   A.push(el('rect', { x: px - 3, y: titleY - 21, width: 206, height: 28, rx: 2, fill: P.sand, opacity: 0, class: 'a', style: L.on([[[0, 9.8], 'opacity:0'], [[9.95, 10.2], 'opacity:.28'], [[10.3, D], 'opacity:0']]) }));
   A.push(text(px, titleY, TITLE2, { size: 22, fill: P.fg, weight: 600, sans: true, class: 'a', style: L.show(10.3, null, 0.15) }));
-  A.push(el('rect', { x: px + 240, y: titleY - 19, width: 1.6, height: 24, fill: P.sand, opacity: 0, class: 'a', style: L.on([[[0, 10.3], 'opacity:0'], [10.31, 'opacity:1'], [10.7, 'opacity:1'], [10.71, 'opacity:0'], [11.1, 'opacity:0'], [11.11, 'opacity:1'], [11.5, 'opacity:1'], [[11.51, D], 'opacity:0']]) }));
+  A.push(el('rect', { x: px + 240, y: titleY - 19, width: 1.6, height: 24, fill: P.sandText, opacity: 0, class: 'a', style: L.on([[[0, 10.3], 'opacity:0'], [10.31, 'opacity:1'], [10.7, 'opacity:1'], [10.71, 'opacity:0'], [11.1, 'opacity:0'], [11.11, 'opacity:1'], [11.5, 'opacity:1'], [[11.51, D], 'opacity:0']]) }));
   const SUB1 = 'Agent output gets reviewed after the fact.', SUB2 = 'You only see it once it is done.';
   const subY = SY + 86;
   A.push(text(px, subY, SUB1, { size: 12.5, fill: P.muted, sans: true, opacity: 0, class: 'a', style: L.show(5.8, 12.75, 0.3) }));
@@ -152,20 +162,20 @@ function renderReplay() {
   // the agent touching an element: a dashed ember frame with a tag
   const touch = (x, y, w, h, t0, t1, below = false) => g({ opacity: 0, class: 'a', style: L.show(t0, t1, 0.15) },
     el('rect', { x, y, width: w, height: h, rx: 2, stroke: P.ember, strokeDasharray: '3 2' })
-    + el('rect', { x: x + w - 40, y: below ? y + h : y - 15, width: 40, height: 15, rx: 2, fill: P.ember })
-    + text(x + w - 20, below ? y + h + 11 : y - 4, 'agent', { size: 11, fill: P.bg, anchor: 'middle', weight: 600 }));
+    + el('rect', { x: x + w - 40, y: below ? y + h : y - 15, width: 40, height: 15, rx: 2, fill: P.tagEmber })
+    + text(x + w - 20, below ? y + h + 11 : y - 4, 'agent', { size: 11, fill: P.onEmber, anchor: 'middle', weight: 600 }));
   A.push(touch(px - 6, titleY - 23, 214, 31, 5.45, 6.1));
   A.push(touch(cx0 - 6, cb - 101, 128, 105, 6.35, 7.25));
   A.push(touch(px - 6, subY - 15, 236, 21, 12.45, 13.2, true));
 
   // chips under the slide
   const chipW = label => textW(label, 11) + 26;
-  const chip = (x, color, label, t0) => g(L.sh(t0),
+  const chip = (x, color, ink, label, t0) => g(L.sh(t0),
     el('rect', { x: x + 0.5, y: SY + SH + 12.5, width: chipW(label), height: 21, rx: 10.5, stroke: color, opacity: 0.9 })
     + el('circle', { cx: x + 11, cy: SY + SH + 23, r: 2.5, fill: color })
-    + text(x + 19, SY + SH + 27, label, { size: 11, fill: color }));
-  A.push(chip(SX, P.sand, 'human edit · slide 2 title', 10.6));
-  A.push(chip(SX + SW - chipW('agent edit · subtitle'), P.ember, 'agent edit · subtitle', 13.0));
+    + text(x + 19, SY + SH + 27, label, { size: 11, fill: ink }));
+  A.push(chip(SX, P.sand, P.sandText, 'human edit · slide 2 title', 10.6));
+  A.push(chip(SX + SW - chipW('agent edit · subtitle'), P.ember, P.emberText, 'agent edit · subtitle', 13.0));
 
   // the person's cursor
   const P0 = [SX + SW + 10, SY + SH + 30], P1 = [px + 120, titleY - 6], P2 = [px + 255, titleY - 12];
@@ -176,9 +186,9 @@ function renderReplay() {
     [[9.7, 11.2], `${tr(P1)};opacity:1;animation-timing-function:cubic-bezier(.4,0,.2,1)`],
     [[12.0, D], `${tr(P2)};opacity:1`],
   ]) },
-  el('path', { d: 'M0,0V16.5L4.3,12.6L7.1,19L9.7,17.9L6.9,11.6H12.6Z', fill: P.sand, stroke: P.bg, strokeWidth: 1.2, strokeLinejoin: 'round' })
-    + el('rect', { x: 12, y: 16, width: 30, height: 16, rx: 3, fill: P.sand })
-    + text(27, 28, 'you', { size: 11, fill: P.bg, anchor: 'middle', weight: 600 }));
+  el('path', { d: 'M0,0V16.5L4.3,12.6L7.1,19L9.7,17.9L6.9,11.6H12.6Z', fill: P.sand, stroke: P.cursorEdge, strokeWidth: 1.2, strokeLinejoin: 'round' })
+    + el('rect', { x: 12, y: 16, width: 30, height: 16, rx: 3, fill: P.tagSand })
+    + text(27, 28, 'you', { size: 11, fill: P.onSand, anchor: 'middle', weight: 600 }));
   A.push(el('circle', { cx: P1[0], cy: P1[1], r: 9, stroke: P.sand, strokeWidth: 1.5, opacity: 0, class: 'a', style: L.on([[[0, 9.8], 'opacity:0;transform:scale(.2)'], [9.85, 'opacity:1;transform:scale(.3)'], [[10.4, D], 'opacity:0;transform:scale(1.2)']]) + ';transform-box:fill-box;transform-origin:center' }));
   A.push(cur);
 
@@ -197,7 +207,7 @@ function renderReplay() {
   const eX = cX + textW('3 files · ', 11.5);
   A.push(text(cX + textW('3 files', 11.5), sy, ' · ', { size: 11.5, fill: P.muted }));
   A.push(text(eX, sy, '0 human edits', { size: 11.5, fill: P.faint, opacity: 0, class: 'a', style: L.show(0, 10.5, 0.1) }));
-  A.push(text(eX, sy, '1 human edit', { size: 11.5, fill: P.sand, class: 'a', style: L.show(10.6, null, 0.1) }));
+  A.push(text(eX, sy, '1 human edit', { size: 11.5, fill: P.sandText, class: 'a', style: L.show(10.6, null, 0.1) }));
 
   out.push(g(L.wrap(), A.join('')));
 
@@ -1393,7 +1403,8 @@ function renderMemory(theme) {
 
 export function renderVisuals() {
   return [
-    ['pneuma-replay.svg', renderReplay()],
+    ['pneuma-replay-light.svg', renderReplay('light')],
+    ['pneuma-replay-dark.svg', renderReplay('dark')],
     ['pneuma-concept-light.svg', renderConcept('light')],
     ['pneuma-concept-dark.svg', renderConcept('dark')],
     ['pkc-light.svg', renderPKC('light')],

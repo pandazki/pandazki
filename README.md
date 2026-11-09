@@ -16,7 +16,10 @@ The Pneuma family is an experiment in re-architecting software for the agent-nat
 
 #### [pneuma-skills](https://github.com/pandazki/pneuma-skills)
 
-<img alt="An illustrative replay of Pneuma: a command starts slide mode, the agent writes slides while a live viewer renders them, a person retitles a slide in the viewer, and the agent updates the subtitle to match." src="assets/pneuma-replay.svg" width="100%">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/pneuma-replay-dark.svg">
+  <img alt="An illustrative replay of Pneuma: a command starts slide mode, the agent writes slides while a live viewer renders them, a person retitles a slide in the viewer, and the agent updates the subtitle to match." src="assets/pneuma-replay-light.svg" width="100%">
+</picture>
 
 An experiment in software distribution — software used to ship features; this ships domain capability, built on mainstream coding harnesses, with long-horizon user preferences maintained automatically. You don't get an app: you fork a capability from a scenario you care about.
 

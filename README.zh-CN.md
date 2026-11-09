@@ -16,7 +16,10 @@ Pneuma 家族是对 agent-native 时代软件形态的一次重构实验。当 a
 
 #### [pneuma-skills](https://github.com/pandazki/pneuma-skills)
 
-<img alt="Pneuma 的示意回放：一条命令启动幻灯片模式，agent 一边写幻灯片，实时视图一边渲染；人在视图里改了一页的标题，agent 随后把副标题改得和它一致。" src="assets/pneuma-replay.svg" width="100%">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/pneuma-replay-dark.svg">
+  <img alt="Pneuma 的示意回放：一条命令启动幻灯片模式，agent 一边写幻灯片，实时视图一边渲染；人在视图里改了一页的标题，agent 随后把副标题改得和它一致。" src="assets/pneuma-replay-light.svg" width="100%">
+</picture>
 
 软件分发层的一次实验——软件过去分发的是功能，这里分发的是领域能力：构建于主流 coding harness 之上，并自动沉淀长程的用户偏好。你获得的不是某个软件，而是从你关心的场景 fork 出来的 capability。
 
