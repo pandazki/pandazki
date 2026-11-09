@@ -14,6 +14,8 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const LOGIN = 'pandazki';
 const START_YEAR = 2024;
 const TOP_REPOS = 9;
+// Repos the chart doesn't name; their commits still count, inside "others".
+const UNLISTED_REPOS = new Set(['Shanda-Group-Ltd/tanka-work-memory-plugin']);
 
 // Facts that don't come from the contribution API. Update by hand when they change.
 const PNEUMA_MODES = 22; // pneuma-skills modes/ directory
@@ -235,8 +237,10 @@ function renderMomentum(stats, theme) {
     if (full.length <= NW) return full;
     return name.length + 4 <= NW ? `.../${name}` : `...${name.slice(-(NW - 3))}`;
   };
-  const rows = ly.repos.slice(0, TOP_REPOS).map(r => ({ ...r, mine: r.owner === LOGIN, label: short(r.owner, r.name) }));
-  const rest = ly.repos.slice(TOP_REPOS);
+  const unlisted = r => UNLISTED_REPOS.has(`${r.owner}/${r.name}`);
+  const listed = ly.repos.filter(r => !unlisted(r));
+  const rows = listed.slice(0, TOP_REPOS).map(r => ({ ...r, mine: r.owner === LOGIN, label: short(r.owner, r.name) }));
+  const rest = [...listed.slice(TOP_REPOS), ...ly.repos.filter(unlisted)];
   if (rest.length) rows.push({ other: true, label: `${rest.length} others`, commits: rest.reduce((a, r) => a + r.commits, 0) });
   const max = Math.max(...rows.map(r => r.commits));
   const sy0 = 222, pitch = 16.5;
