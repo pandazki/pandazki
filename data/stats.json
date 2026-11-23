@@ -1,5 +1,5 @@
 {
-  "asOf": "2026-11-16",
+  "asOf": "2026-11-23",
   "months": [
     {
       "month": "2024-01",
@@ -139,24 +139,24 @@
     }
   ],
   "lastYear": {
-    "commits": 2983,
-    "prs": 352,
-    "private": 3373,
+    "commits": 3089,
+    "prs": 359,
+    "private": 3775,
     "repos": [
       {
         "owner": "pandazki",
         "name": "pneuma-skills",
-        "commits": 1141
+        "commits": 1155
       },
       {
         "owner": "pandazki",
         "name": "pneuma-framework",
-        "commits": 622
+        "commits": 639
       },
       {
         "owner": "pandazki",
         "name": "pneuma-space",
-        "commits": 383
+        "commits": 456
       },
       {
         "owner": "nemori-ai",
@@ -171,7 +171,7 @@
       {
         "owner": "pandazki",
         "name": "pneuma-knowledge-compiler",
-        "commits": 104
+        "commits": 105
       },
       {
         "owner": "pandazki",
@@ -200,12 +200,12 @@
       },
       {
         "owner": "pandazki",
-        "name": "lumina",
+        "name": "pneuma-shuimo",
         "commits": 10
       },
       {
         "owner": "pandazki",
-        "name": "pneuma-shuimo",
+        "name": "lumina",
         "commits": 10
       },
       {
@@ -214,13 +214,13 @@
         "commits": 9
       },
       {
-        "owner": "pandazki",
-        "name": "pneuma-mode-gallery",
-        "commits": 3
-      },
-      {
         "owner": "nemori-ai",
         "name": "omne-harness-lite",
+        "commits": 4
+      },
+      {
+        "owner": "pandazki",
+        "name": "pneuma-mode-gallery",
         "commits": 3
       },
       {
